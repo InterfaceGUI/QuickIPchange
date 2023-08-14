@@ -1,0 +1,31 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main  # Adjust the branch name as needed
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0'  # Specify the desired .NET 6 version
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build application
+      run: dotnet build --configuration Release
+      
+    - name: Upload application
+      uses: actions/upload-artifact@v2
+      with:
+        name: app-artifact
+        path: QuickIPchange/bin/Release/net6.0-windows/QuickIPchange.exe
