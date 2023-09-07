@@ -1,32 +1,31 @@
-name: Build and Test
+name: Build and Publish Windows Forms App
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - main  # Adjust the branch name as needed
+      - main # 指定要触发 workflow 的分支
 
 jobs:
   build:
-    runs-on: windows-latest
-
+    runs-on: windows-latest # 选择 Windows 运行环境
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Setup .NET
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: '6.0'  # Specify the desired .NET 6 version
+        dotnet-version: 6.0.x  # 指定 .NET 6 版本
 
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build application
+    - name: Build Windows Forms App
       run: dotnet build --configuration Release
-      
-    - name: Upload application
+
+    - name: Publish Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: app-artifact
-        path: QuickIPchange/bin/Release/net6.0-windows/QuickIPchange.exe
+        name: windows-forms-app  # 指定 artifact 的名称
+        path: ./QuickIPchange/bin/Release/net6.0-windows/QuickIPchange.exe  # 指定要上传的应用程序的路径
