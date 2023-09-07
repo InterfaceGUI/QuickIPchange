@@ -22,121 +22,192 @@ Partial Class Form1
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Me.components = New System.ComponentModel.Container()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Form1))
-        Me.Button1 = New System.Windows.Forms.Button()
-        Me.Button2 = New System.Windows.Forms.Button()
-        Me.Button3 = New System.Windows.Forms.Button()
-        Me.Button4 = New System.Windows.Forms.Button()
-        Me.Button5 = New System.Windows.Forms.Button()
-        Me.ListBox1 = New System.Windows.Forms.ListBox()
-        Me.ComboBox1 = New System.Windows.Forms.ComboBox()
-        Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
-        Me.SuspendLayout()
-        '
-        'Button1
-        '
-        Me.Button1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button1.Font = New System.Drawing.Font("Microsoft JhengHei UI", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
-        Me.Button1.Location = New System.Drawing.Point(12, 46)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(435, 47)
-        Me.Button1.TabIndex = 0
-        Me.Button1.Text = "設定為DCHP"
-        Me.Button1.UseVisualStyleBackColor = True
-        '
-        'Button2
-        '
-        Me.Button2.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button2.Font = New System.Drawing.Font("Microsoft JhengHei UI", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
-        Me.Button2.Location = New System.Drawing.Point(12, 99)
-        Me.Button2.Name = "Button2"
-        Me.Button2.Size = New System.Drawing.Size(435, 47)
-        Me.Button2.TabIndex = 0
-        Me.Button2.Text = "設定為 192.168.1.66"
-        Me.Button2.UseVisualStyleBackColor = True
-        '
-        'Button3
-        '
-        Me.Button3.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button3.Font = New System.Drawing.Font("Microsoft JhengHei UI", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
-        Me.Button3.Location = New System.Drawing.Point(12, 152)
-        Me.Button3.Name = "Button3"
-        Me.Button3.Size = New System.Drawing.Size(435, 47)
-        Me.Button3.TabIndex = 0
-        Me.Button3.Text = "設定為 ABB"
-        Me.Button3.UseVisualStyleBackColor = True
-        '
-        'Button4
-        '
-        Me.Button4.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button4.Font = New System.Drawing.Font("Microsoft JhengHei UI", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
-        Me.Button4.Location = New System.Drawing.Point(12, 205)
-        Me.Button4.Name = "Button4"
-        Me.Button4.Size = New System.Drawing.Size(435, 47)
-        Me.Button4.TabIndex = 0
-        Me.Button4.Text = "設定為 192.168.0.66"
-        Me.Button4.UseVisualStyleBackColor = True
-        '
-        'Button5
-        '
-        Me.Button5.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Button5.Font = New System.Drawing.Font("Microsoft JhengHei UI", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
-        Me.Button5.Location = New System.Drawing.Point(12, 258)
-        Me.Button5.Name = "Button5"
-        Me.Button5.Size = New System.Drawing.Size(435, 47)
-        Me.Button5.TabIndex = 0
-        Me.Button5.Text = "設定為192.168.100.66"
-        Me.Button5.UseVisualStyleBackColor = True
-        '
-        'ListBox1
-        '
-        Me.ListBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.ItemHeight = 15
-        Me.ListBox1.Location = New System.Drawing.Point(12, 311)
-        Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(435, 169)
-        Me.ListBox1.TabIndex = 1
-        '
-        'ComboBox1
-        '
-        Me.ComboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox1.Font = New System.Drawing.Font("Microsoft JhengHei UI", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
-        Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(12, 12)
-        Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(435, 28)
-        Me.ComboBox1.TabIndex = 2
-        '
-        'Timer1
-        '
-        Me.Timer1.Interval = 1000
-        '
-        'Form1
-        '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(459, 492)
-        Me.Controls.Add(Me.ComboBox1)
-        Me.Controls.Add(Me.ListBox1)
-        Me.Controls.Add(Me.Button5)
-        Me.Controls.Add(Me.Button4)
-        Me.Controls.Add(Me.Button3)
-        Me.Controls.Add(Me.Button2)
-        Me.Controls.Add(Me.Button1)
-        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Name = "Form1"
-        Me.Text = "快速IP更改"
-        Me.ResumeLayout(False)
-
+        components = New ComponentModel.Container()
+        Dim resources As ComponentModel.ComponentResourceManager = New ComponentModel.ComponentResourceManager(GetType(Form1))
+        Button1 = New Button()
+        Button2 = New Button()
+        Button3 = New Button()
+        Button4 = New Button()
+        Button5 = New Button()
+        ListBox1 = New ListBox()
+        ComboBox1 = New ComboBox()
+        Timer1 = New Timer(components)
+        ToolStrip1 = New ToolStrip()
+        ToolStripSeparator1 = New ToolStripSeparator()
+        ToolStripLabel1 = New ToolStripLabel()
+        ToolStripTextBox1 = New ToolStripTextBox()
+        ToolStripSeparator2 = New ToolStripSeparator()
+        BackgroundWorker1 = New ComponentModel.BackgroundWorker()
+        ToolStrip1.SuspendLayout()
+        SuspendLayout()
+        ' 
+        ' Button1
+        ' 
+        Button1.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        Button1.BackColor = Color.FromArgb(CByte(61), CByte(61), CByte(61))
+        Button1.FlatAppearance.BorderColor = Color.Black
+        Button1.FlatStyle = FlatStyle.Flat
+        Button1.Font = New Font("Microsoft JhengHei UI", 12F, FontStyle.Bold, GraphicsUnit.Point)
+        Button1.ForeColor = Color.White
+        Button1.Location = New Point(12, 74)
+        Button1.Name = "Button1"
+        Button1.Size = New Size(435, 47)
+        Button1.TabIndex = 0
+        Button1.Text = "設定為DCHP"
+        Button1.UseVisualStyleBackColor = False
+        ' 
+        ' Button2
+        ' 
+        Button2.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        Button2.BackColor = Color.FromArgb(CByte(61), CByte(61), CByte(61))
+        Button2.FlatAppearance.BorderColor = Color.Black
+        Button2.FlatStyle = FlatStyle.Flat
+        Button2.Font = New Font("Microsoft JhengHei UI", 12F, FontStyle.Bold, GraphicsUnit.Point)
+        Button2.ForeColor = Color.White
+        Button2.Location = New Point(12, 131)
+        Button2.Name = "Button2"
+        Button2.Size = New Size(435, 47)
+        Button2.TabIndex = 0
+        Button2.Text = "設定為 192.168.1.66"
+        Button2.UseVisualStyleBackColor = False
+        ' 
+        ' Button3
+        ' 
+        Button3.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        Button3.BackColor = Color.FromArgb(CByte(61), CByte(61), CByte(61))
+        Button3.FlatAppearance.BorderColor = Color.Black
+        Button3.FlatStyle = FlatStyle.Flat
+        Button3.Font = New Font("Microsoft JhengHei UI", 12F, FontStyle.Bold, GraphicsUnit.Point)
+        Button3.ForeColor = Color.White
+        Button3.Location = New Point(12, 188)
+        Button3.Name = "Button3"
+        Button3.Size = New Size(435, 47)
+        Button3.TabIndex = 0
+        Button3.Text = "設定為 ABB"
+        Button3.UseVisualStyleBackColor = False
+        ' 
+        ' Button4
+        ' 
+        Button4.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        Button4.BackColor = Color.FromArgb(CByte(61), CByte(61), CByte(61))
+        Button4.FlatAppearance.BorderColor = Color.Black
+        Button4.FlatStyle = FlatStyle.Flat
+        Button4.Font = New Font("Microsoft JhengHei UI", 12F, FontStyle.Bold, GraphicsUnit.Point)
+        Button4.ForeColor = Color.White
+        Button4.Location = New Point(12, 245)
+        Button4.Name = "Button4"
+        Button4.Size = New Size(435, 47)
+        Button4.TabIndex = 0
+        Button4.Text = "設定為 192.168.0.66"
+        Button4.UseVisualStyleBackColor = False
+        ' 
+        ' Button5
+        ' 
+        Button5.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
+        Button5.BackColor = Color.FromArgb(CByte(61), CByte(61), CByte(61))
+        Button5.FlatAppearance.BorderColor = Color.Black
+        Button5.FlatStyle = FlatStyle.Flat
+        Button5.Font = New Font("Microsoft JhengHei UI", 12F, FontStyle.Bold, GraphicsUnit.Point)
+        Button5.ForeColor = Color.White
+        Button5.Location = New Point(12, 302)
+        Button5.Name = "Button5"
+        Button5.Size = New Size(435, 47)
+        Button5.TabIndex = 0
+        Button5.Text = "設定為192.168.100.66"
+        Button5.UseVisualStyleBackColor = False
+        ' 
+        ' ListBox1
+        ' 
+        ListBox1.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
+        ListBox1.BackColor = Color.FromArgb(CByte(37), CByte(37), CByte(38))
+        ListBox1.BorderStyle = BorderStyle.None
+        ListBox1.Font = New Font("Microsoft JhengHei UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
+        ListBox1.ForeColor = Color.White
+        ListBox1.FormattingEnabled = True
+        ListBox1.ItemHeight = 19
+        ListBox1.Location = New Point(12, 359)
+        ListBox1.Name = "ListBox1"
+        ListBox1.Size = New Size(435, 190)
+        ListBox1.TabIndex = 1
+        ' 
+        ' ComboBox1
+        ' 
+        ComboBox1.BackColor = Color.FromArgb(CByte(37), CByte(37), CByte(38))
+        ComboBox1.DropDownStyle = ComboBoxStyle.DropDownList
+        ComboBox1.Font = New Font("Microsoft JhengHei UI", 12F, FontStyle.Bold, GraphicsUnit.Point)
+        ComboBox1.ForeColor = Color.White
+        ComboBox1.FormattingEnabled = True
+        ComboBox1.Location = New Point(12, 40)
+        ComboBox1.Name = "ComboBox1"
+        ComboBox1.Size = New Size(435, 28)
+        ComboBox1.TabIndex = 2
+        ' 
+        ' Timer1
+        ' 
+        Timer1.Interval = 500
+        ' 
+        ' ToolStrip1
+        ' 
+        ToolStrip1.Font = New Font("Microsoft JhengHei UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point)
+        ToolStrip1.GripStyle = ToolStripGripStyle.Hidden
+        ToolStrip1.ImageScalingSize = New Size(25, 25)
+        ToolStrip1.Items.AddRange(New ToolStripItem() {ToolStripSeparator1, ToolStripLabel1, ToolStripTextBox1, ToolStripSeparator2})
+        ToolStrip1.LayoutStyle = ToolStripLayoutStyle.HorizontalStackWithOverflow
+        ToolStrip1.Location = New Point(0, 0)
+        ToolStrip1.Name = "ToolStrip1"
+        ToolStrip1.Padding = New Padding(0)
+        ToolStrip1.Size = New Size(459, 28)
+        ToolStrip1.TabIndex = 3
+        ToolStrip1.Text = "ToolStrip1"
+        ' 
+        ' ToolStripSeparator1
+        ' 
+        ToolStripSeparator1.Name = "ToolStripSeparator1"
+        ToolStripSeparator1.Size = New Size(6, 28)
+        ' 
+        ' ToolStripLabel1
+        ' 
+        ToolStripLabel1.Name = "ToolStripLabel1"
+        ToolStripLabel1.Size = New Size(97, 25)
+        ToolStripLabel1.Text = "192.168.x."
+        ' 
+        ' ToolStripTextBox1
+        ' 
+        ToolStripTextBox1.Font = New Font("Microsoft JhengHei UI", 12F, FontStyle.Bold Or FontStyle.Underline, GraphicsUnit.Point)
+        ToolStripTextBox1.Name = "ToolStripTextBox1"
+        ToolStripTextBox1.Size = New Size(30, 28)
+        ToolStripTextBox1.Text = "66"
+        ' 
+        ' ToolStripSeparator2
+        ' 
+        ToolStripSeparator2.Name = "ToolStripSeparator2"
+        ToolStripSeparator2.Size = New Size(6, 28)
+        ' 
+        ' BackgroundWorker1
+        ' 
+        ' 
+        ' Form1
+        ' 
+        AutoScaleDimensions = New SizeF(7F, 15F)
+        AutoScaleMode = AutoScaleMode.Font
+        BackColor = Color.FromArgb(CByte(31), CByte(31), CByte(31))
+        ClientSize = New Size(459, 561)
+        Controls.Add(ToolStrip1)
+        Controls.Add(ComboBox1)
+        Controls.Add(ListBox1)
+        Controls.Add(Button5)
+        Controls.Add(Button4)
+        Controls.Add(Button3)
+        Controls.Add(Button2)
+        Controls.Add(Button1)
+        ForeColor = Color.Black
+        Icon = CType(resources.GetObject("$this.Icon"), Icon)
+        Name = "Form1"
+        Text = "QuickIPChange"
+        ToolStrip1.ResumeLayout(False)
+        ToolStrip1.PerformLayout()
+        ResumeLayout(False)
+        PerformLayout()
     End Sub
 
     Friend WithEvents Button1 As Button
@@ -147,4 +218,10 @@ Partial Class Form1
     Friend WithEvents ListBox1 As ListBox
     Friend WithEvents ComboBox1 As ComboBox
     Friend WithEvents Timer1 As Timer
+    Friend WithEvents ToolStrip1 As ToolStrip
+    Friend WithEvents ToolStripSeparator1 As ToolStripSeparator
+    Friend WithEvents ToolStripLabel1 As ToolStripLabel
+    Friend WithEvents ToolStripTextBox1 As ToolStripTextBox
+    Friend WithEvents ToolStripSeparator2 As ToolStripSeparator
+    Friend WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
 End Class
