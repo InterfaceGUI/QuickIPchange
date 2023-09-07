@@ -127,7 +127,7 @@ Partial Class Form1
         ListBox1.ItemHeight = 19
         ListBox1.Location = New Point(12, 359)
         ListBox1.Name = "ListBox1"
-        ListBox1.Size = New Size(435, 190)
+        ListBox1.Size = New Size(435, 152)
         ListBox1.TabIndex = 1
         ' 
         ' ComboBox1
@@ -191,7 +191,7 @@ Partial Class Form1
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
         BackColor = Color.FromArgb(CByte(31), CByte(31), CByte(31))
-        ClientSize = New Size(459, 561)
+        ClientSize = New Size(459, 526)
         Controls.Add(ToolStrip1)
         Controls.Add(ComboBox1)
         Controls.Add(ListBox1)

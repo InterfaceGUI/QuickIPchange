@@ -173,9 +173,10 @@ Public Class Form1
         Return Nothing
     End Function
 
+
+
     Private Sub AddMessageToListBox1(message As String)
         ListBox1.Items.Add(message)
-
     End Sub
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
