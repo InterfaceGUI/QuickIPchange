@@ -31,5 +31,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: clickonce-artifact
-        path: ./QuickIPchange/bin/publish/Application Files/QuickIPchange_1_0_0_5/QuickIPchange.exe
+        path: ./QuickIPchange/bin/Release/net6.0-windows/win-x64/publish/QuickIPchange.exe
 
