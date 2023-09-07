@@ -20,9 +20,6 @@ jobs:
           
     - name: Restore dependencies
       run: dotnet restore
-      
-    #- name: Build Windows Forms App
-    #  run: dotnet build --configuration Release
 
     - name: Publish Windows Forms App with ClickOnce
       run: dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:ClickOnceDeploymentBuild=true /p:PublishProfile="./QuickIPchange/My Project/PublishProfiles/ClickOnceProfile.pubxml"
@@ -33,3 +30,10 @@ jobs:
         name: clickonce-artifact
         path: ./QuickIPchange/bin/Release/net6.0-windows/win-x64/publish/QuickIPchange.exe
 
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./QuickIPchange/bin/Release/net6.0-windows/win-x64/publish/QuickIPchange.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
