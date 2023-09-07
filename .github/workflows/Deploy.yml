@@ -25,7 +25,7 @@ jobs:
     #  run: dotnet build --configuration Release
 
     - name: Publish Windows Forms App with ClickOnce
-      run: dotnet publish --configuration Release --framework net6.0-windows --runtime win-x86 --self-contained true --output bin\Release\net6.0-windows\win-x86\app.publish\ --publish-single-file true --target-culture zh-TW --no-build
+      run: dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:ClickOnceDeploymentBuild=true /p:PublishProfile="./QuickIPchange/My Project/PublishProfiles/ClickOnceProfile.pubxml"
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
