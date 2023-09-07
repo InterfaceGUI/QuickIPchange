@@ -9,23 +9,23 @@ on:
 jobs:
   build:
     runs-on: windows-latest # 选择 Windows 运行环境
-
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0 # 适用于 .NET Core 3.1 的示例
+        dotnet-version: 6.0.x  # 指定 .NET 6 版本
+
+    - name: Restore dependencies
+      run: dotnet restore
 
     - name: Build Windows Forms App
-      run: |
-        cd ./QuickIPchange
-        dotnet build --configuration Release
+      run: dotnet build --configuration Release
 
-    - name: Archive Artifacts
+    - name: Publish Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: windows-forms-app-artifact # 自定义 artifact 名称
-        path: ./QuickIPchange\bin\Release\net6.0-windows\QuickIPchange.exe # 构建输出目录，根据实际情况进行调整
+        name: windows-forms-app  # 指定 artifact 的名称
+        path: ./QuickIPchange/bin/Release/net6.0-windows/QuickIPchange.exe  # 指定要上传的应用程序的路径
