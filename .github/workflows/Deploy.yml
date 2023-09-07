@@ -1,0 +1,35 @@
+name: Deploy Windows Forms App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x # 指定 .NET 6 版本
+          
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build Windows Forms App
+      run: dotnet build --configuration Release
+
+    - name: Publish Windows Forms App with ClickOnce
+      run: dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:ClickOnceDeploymentBuild=true /p:PublishProfile=./QuickIPchange/My Project/PublishProfiles/ClickOnceProfile.pubxml
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: clickonce-artifact
+        path: ./QuickIPchange/bin/publish/Application Files/QuickIPchange_1_0_0_5/QuickIPchange.exe
+
