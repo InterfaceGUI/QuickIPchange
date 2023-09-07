@@ -22,6 +22,7 @@ Public Class Form1
 
     Private Sub ComboBox1_DropDown(sender As Object, e As EventArgs) Handles ComboBox1.DropDown
         getinterfaces()
+
     End Sub
 
 
