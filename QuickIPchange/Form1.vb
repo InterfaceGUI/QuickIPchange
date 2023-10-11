@@ -225,7 +225,7 @@ Public Class Form1
         If ToolStripTextBox1.Text <> "" Then
             If Val(ToolStripTextBox1.Text) >= 0 And Val(ToolStripTextBox1.Text) <= 255 Then
                 My.Settings.DefultIP = ToolStripTextBox1.Text
-
+                My.Settings.Save()
                 Button2.Text = $"設定為 192.168.1.{ My.Settings.DefultIP}"
                 Button4.Text = $"設定為 192.168.0.{ My.Settings.DefultIP}"
                 Button5.Text = $"設定為 192.168.100.{ My.Settings.DefultIP}"
@@ -276,6 +276,7 @@ Public Class Form1
 
     End Sub
 
+    Private Sub ToolStripTextBox1_Click(sender As Object, e As EventArgs) Handles ToolStripTextBox1.Click
 
-
+    End Sub
 End Class
