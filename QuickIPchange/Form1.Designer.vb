@@ -175,7 +175,7 @@ Partial Class Form1
         ' 
         ToolStripTextBox1.Font = New Font("Microsoft JhengHei UI", 12F, FontStyle.Bold Or FontStyle.Underline, GraphicsUnit.Point)
         ToolStripTextBox1.Name = "ToolStripTextBox1"
-        ToolStripTextBox1.Size = New Size(30, 28)
+        ToolStripTextBox1.Size = New Size(40, 28)
         ToolStripTextBox1.Text = "66"
         ' 
         ' ToolStripSeparator2

@@ -179,8 +179,9 @@ Public Class Form1
     Private Sub AddMessageToListBox1(message As String)
         ListBox1.Items.Add(message)
     End Sub
-
+    Dim loaded As Boolean
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        loaded = False
 
         If Not IsAdministrator() Then
             RestartAsAdministrator()
@@ -188,9 +189,12 @@ Public Class Form1
         Button2.Text = $"設定為 192.168.1.{ My.Settings.DefultIP}"
         Button4.Text = $"設定為 192.168.0.{ My.Settings.DefultIP}"
         Button5.Text = $"設定為 192.168.100.{ My.Settings.DefultIP}"
+        ToolStripTextBox1.Text = My.Settings.DefultIP
 
         getinterfaces()
         Timer1.Enabled = True
+
+        loaded = True
     End Sub
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
@@ -222,6 +226,7 @@ Public Class Form1
     End Sub
 
     Private Sub ToolStripTextBox1_TextChanged(sender As Object, e As EventArgs) Handles ToolStripTextBox1.TextChanged
+        If loaded = False Then Return
         If ToolStripTextBox1.Text <> "" Then
             If Val(ToolStripTextBox1.Text) >= 0 And Val(ToolStripTextBox1.Text) <= 255 Then
                 My.Settings.DefultIP = ToolStripTextBox1.Text
