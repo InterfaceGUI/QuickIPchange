@@ -186,6 +186,25 @@ Public Class Form1
         If Not IsAdministrator() Then
             RestartAsAdministrator()
         End If
+
+        Dim currentProcess As Process = Process.GetCurrentProcess()
+        Dim processes() As Process = Process.GetProcessesByName(currentProcess.ProcessName)
+
+        For Each p As Process In processes
+            ' 檢查是否進程是當前的進程，如果不是則關閉它
+            If p.Id <> currentProcess.Id Then
+                Try
+                    ' 嘗試正常終止進程
+                    p.CloseMainWindow()
+                    ' 如果上面的方法失敗，強制終止進程
+                    p.Kill()
+                Catch ex As Exception
+                    ' 處理任何錯誤
+                    Console.WriteLine(ex.Message)
+                End Try
+            End If
+        Next
+
         Button2.Text = $"設定為 192.168.1.{ My.Settings.DefultIP}"
         Button4.Text = $"設定為 192.168.0.{ My.Settings.DefultIP}"
         Button5.Text = $"設定為 192.168.100.{ My.Settings.DefultIP}"
@@ -219,7 +238,9 @@ Public Class Form1
             Dim process As Process = New Process()
             process.StartInfo = startInfo
             process.Start()
-            Application.Exit()
+            'Me.Dispose()
+            End
+            'Application.Exit()
         Catch ex As Exception
             ' Handle the exception if elevation fails
         End Try
