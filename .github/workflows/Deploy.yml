@@ -20,17 +20,18 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Publish Windows Forms App with ClickOnce
+    - name: Publish Windows Forms App with ClickOnce without version
       if: "!startsWith(github.ref, 'refs/tags/')"
       run: dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:ClickOnceDeploymentBuild=true /p:PublishProfile="./QuickIPchange/My Project/PublishProfiles/ClickOnceProfile.pubxml"
     
     - name: Get the version Tag
       if: startsWith(github.ref, 'refs/tags/')
-      run: echo "VERSION=$(git describe --tags)" >> $GITHUB_ENV
+      id: vars
+      run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
       
-    - name: Publish Windows Forms App with ClickOnce
+    - name: Publish Windows Forms App with ClickOnce with version
       if: startsWith(github.ref, 'refs/tags/')
-      run: dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:ClickOnceDeploymentBuild=true /p:PublishProfile="./QuickIPchange/My Project/PublishProfiles/ClickOnceProfile.pubxml" /p:AssemblyVersion=$VERSION /p:FileVersion=$VERSION
+      run: dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:ClickOnceDeploymentBuild=true /p:PublishProfile="./QuickIPchange/My Project/PublishProfiles/ClickOnceProfile.pubxml" /p:AssemblyVersion=${{ steps.vars.outputs.tag }} /p:FileVersion=${{ steps.vars.outputs.tag }}
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
