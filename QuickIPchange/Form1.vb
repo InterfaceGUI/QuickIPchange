@@ -1,7 +1,11 @@
-﻿Imports System.Net
+﻿Imports System.ComponentModel
+Imports System.IO
+Imports System.Net
 Imports System.Net.NetworkInformation
+Imports System.Reflection
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
+Imports Newtonsoft.Json.Linq
 
 Public Class Form1
 
@@ -174,7 +178,69 @@ Public Class Form1
         Return Nothing
     End Function
 
+    Private Function getGithubReleases() As Dictionary(Of String, String)
+        Dim result As New Dictionary(Of String, String)
+        Dim apiUrl As String = "https://api.github.com/repos/InterfaceGUI/QuickIPchange/releases/latest"
+        Dim responseJson As String
 
+        Using wc As New WebClient()
+            ' 設置 User-Agent，GitHub API 需要這個 header
+            wc.Headers.Add("User-Agent", "request")
+            responseJson = wc.DownloadString(apiUrl)
+        End Using
+
+        Dim jsonObject As JObject = JObject.Parse(responseJson)
+
+        ' 提取 tag_name
+        Dim tagName As String = jsonObject("tag_name").ToString()
+
+        ' 提取 .exe 下載連結
+        Dim exeDownloadUrl As String = ""
+        For Each asset As JObject In jsonObject("assets")
+            If asset("name").ToString().EndsWith(".exe") Then
+                exeDownloadUrl = asset("browser_download_url").ToString()
+                Exit For
+            End If
+        Next
+
+        ' 將提取的資訊加入字典
+        result.Add("tag_name", tagName)
+        result.Add("exe_download_url", exeDownloadUrl)
+        result.Add("release_notes", jsonObject("body").ToString())
+        Return result
+
+
+    End Function
+
+    Private Sub ReqUpdata()
+
+    End Sub
+
+    Private Sub Timer2_Tick(sender As Object, e As EventArgs) Handles Timer2.Tick
+        Timer2.Enabled = False
+
+        Dim ReleasesInfo As Dictionary(Of String, String) = getGithubReleases()
+        Dim latestVersion As Version = New Version(ReleasesInfo.Item("tag_name"))
+        Dim currentVersion As Version = Assembly.GetExecutingAssembly().GetName().Version
+
+
+        Dim comparisonResult As Integer = currentVersion.CompareTo(latestVersion)
+        If comparisonResult < 0 Then
+            ToolStripStatusLabel6.Text = $"| 有新版本可用：{latestVersion}"
+            If Debugger.IsAttached Then Return
+            Dim result As DialogResult = MessageBox.Show($"發現新版本：{latestVersion}。是否現在更新?", "有新版本", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+            If result = DialogResult.Yes Then
+                Dim updateForm As New UpdataMsgBox(ReleasesInfo.Item("exe_download_url"), ReleasesInfo.Item("release_notes"))
+                updateForm.ShowDialog()
+            End If
+
+        ElseIf comparisonResult = 0 Then
+            Console.WriteLine($"目前版本 {currentVersion} 已是最新版本")
+        Else
+            Console.WriteLine($"目前版本 {currentVersion} 高於 GitHub 上的版本 {latestVersion}")
+        End If
+
+    End Sub
 
     Private Sub AddMessageToListBox1(message As String)
         ListBox1.Items.Add(message)
@@ -183,9 +249,12 @@ Public Class Form1
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         loaded = False
 
-        If Not IsAdministrator() Then
+        If Not IsAdministrator() And Not Debugger.IsAttached Then
             RestartAsAdministrator()
         End If
+
+        Dim currentVersion As Version = Assembly.GetExecutingAssembly().GetName().Version
+        ToolStripStatusLabel5.Text = currentVersion.ToString()
 
         Dim currentProcess As Process = Process.GetCurrentProcess()
         Dim processes() As Process = Process.GetProcessesByName(currentProcess.ProcessName)
@@ -212,7 +281,7 @@ Public Class Form1
 
         getinterfaces()
         Timer1.Enabled = True
-
+        Timer2.Enabled = True
         loaded = True
     End Sub
 
@@ -227,6 +296,7 @@ Public Class Form1
         Dim identity As WindowsIdentity = WindowsIdentity.GetCurrent()
         Dim principal As WindowsPrincipal = New WindowsPrincipal(identity)
         Return principal.IsInRole(WindowsBuiltInRole.Administrator)
+
     End Function
 
     Private Sub RestartAsAdministrator()
@@ -302,7 +372,5 @@ Public Class Form1
 
     End Sub
 
-    Private Sub ToolStripTextBox1_Click(sender As Object, e As EventArgs) Handles ToolStripTextBox1.Click
 
-    End Sub
 End Class
