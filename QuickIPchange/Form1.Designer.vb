@@ -42,6 +42,7 @@ Partial Class Form1
         ToolStripStatusLabel5 = New ToolStripStatusLabel()
         ToolStripStatusLabel6 = New ToolStripStatusLabel()
         Timer2 = New Timer(components)
+        ToolStripStatusLabel7 = New ToolStripStatusLabel()
         StatusStrip1.SuspendLayout()
         SuspendLayout()
         ' 
@@ -157,7 +158,7 @@ Partial Class Form1
         ' StatusStrip1
         ' 
         StatusStrip1.BackColor = SystemColors.Control
-        StatusStrip1.Items.AddRange(New ToolStripItem() {ToolStripStatusLabel1, ToolStripTextBox1, ToolStripStatusLabel2, ToolStripStatusLabel3, ToolStripStatusLabel4, ToolStripStatusLabel5, ToolStripStatusLabel6})
+        StatusStrip1.Items.AddRange(New ToolStripItem() {ToolStripStatusLabel1, ToolStripTextBox1, ToolStripStatusLabel2, ToolStripStatusLabel3, ToolStripStatusLabel4, ToolStripStatusLabel5, ToolStripStatusLabel6, ToolStripStatusLabel7})
         StatusStrip1.Location = New Point(0, 517)
         StatusStrip1.Name = "StatusStrip1"
         StatusStrip1.Size = New Size(459, 28)
@@ -216,6 +217,13 @@ Partial Class Form1
         ' 
         Timer2.Interval = 3000
         ' 
+        ' ToolStripStatusLabel7
+        ' 
+        ToolStripStatusLabel7.Image = CType(resources.GetObject("ToolStripStatusLabel7.Image"), Image)
+        ToolStripStatusLabel7.Name = "ToolStripStatusLabel7"
+        ToolStripStatusLabel7.Size = New Size(16, 23)
+        ToolStripStatusLabel7.Visible = False
+        ' 
         ' Form1
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
@@ -258,4 +266,5 @@ Partial Class Form1
     Friend WithEvents ToolStripStatusLabel5 As ToolStripStatusLabel
     Friend WithEvents ToolStripStatusLabel6 As ToolStripStatusLabel
     Friend WithEvents Timer2 As Timer
+    Friend WithEvents ToolStripStatusLabel7 As ToolStripStatusLabel
 End Class

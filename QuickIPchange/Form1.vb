@@ -178,7 +178,7 @@ Public Class Form1
         Return Nothing
     End Function
 
-    Private Function getGithubReleases() As Dictionary(Of String, String)
+    Private Async Function getGithubReleases() As Task(Of Dictionary(Of String, String))
         Dim result As New Dictionary(Of String, String)
         Dim apiUrl As String = "https://api.github.com/repos/InterfaceGUI/QuickIPchange/releases/latest"
         Dim responseJson As String
@@ -186,7 +186,12 @@ Public Class Form1
         Using wc As New WebClient()
             ' 設置 User-Agent，GitHub API 需要這個 header
             wc.Headers.Add("User-Agent", "request")
-            responseJson = wc.DownloadString(apiUrl)
+            Try
+                responseJson = Await wc.DownloadStringTaskAsync(apiUrl)
+            Catch ex As Exception
+                Return Nothing
+            End Try
+            'responseJson = wc.DownloadString(apiUrl)
         End Using
 
         Dim jsonObject As JObject = JObject.Parse(responseJson)
@@ -207,6 +212,7 @@ Public Class Form1
         result.Add("tag_name", tagName)
         result.Add("exe_download_url", exeDownloadUrl)
         result.Add("release_notes", jsonObject("body").ToString())
+        ToolStripStatusLabel7.Visible = True
         Return result
 
 
@@ -216,10 +222,15 @@ Public Class Form1
 
     End Sub
 
-    Private Sub Timer2_Tick(sender As Object, e As EventArgs) Handles Timer2.Tick
+    Private Async Sub Timer2_Tick(sender As Object, e As EventArgs) Handles Timer2.Tick
         Timer2.Enabled = False
 
-        Dim ReleasesInfo As Dictionary(Of String, String) = getGithubReleases()
+        Dim ReleasesInfo As Dictionary(Of String, String) = Await getGithubReleases()
+        If ReleasesInfo Is Nothing Then
+            ToolStripStatusLabel7.Visible = True
+            Exit Sub
+        End If
+
         Dim latestVersion As Version = New Version(ReleasesInfo.Item("tag_name"))
         Dim currentVersion As Version = Assembly.GetExecutingAssembly().GetName().Version
 
@@ -235,6 +246,7 @@ Public Class Form1
             End If
 
         ElseIf comparisonResult = 0 Then
+            ToolStripStatusLabel6.Text = $"已是最新版本"
             Console.WriteLine($"目前版本 {currentVersion} 已是最新版本")
         Else
             Console.WriteLine($"目前版本 {currentVersion} 高於 GitHub 上的版本 {latestVersion}")
