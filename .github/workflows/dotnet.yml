@@ -1,11 +1,9 @@
 name: Build and Publish Windows Forms App
-
 on:
   workflow_dispatch:
   push:
     branches:
       - main # 指定要触发 workflow 的分支
-
 jobs:
   build:
     runs-on: windows-latest # 选择 Windows 运行环境
@@ -17,9 +15,12 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x  # 指定 .NET 6 版本
-      
+
+    - name: Add local NuGet source
+      run: dotnet nuget add source ${{ github.workspace }}/nuget -n local
+
     - name: Restore dependencies
-      run: dotnet restore -s ./QuickIPchange/
+      run: dotnet restore --source ${{ github.workspace }}/nuget --source https://api.nuget.org/v3/index.json
 
     - name: Build Windows Forms App
       run: dotnet build --configuration Release
