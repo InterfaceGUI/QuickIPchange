@@ -1,182 +1,119 @@
-﻿Imports System.ComponentModel
-Imports System.IO
-Imports System.Net
+﻿Imports System.Net
 Imports System.Net.NetworkInformation
+Imports System.Management
 Imports System.Reflection
 Imports System.Security.Principal
-Imports System.Text.RegularExpressions
 Imports Newtonsoft.Json.Linq
 
 Public Class Form1
 
-    Private Sub getinterfaces()
-        Dim nics As NetworkInterface() = NetworkInterface.GetAllNetworkInterfaces
-        If nics.Length < 0 Or nics Is Nothing Then
-            MsgBox("No NICS")
-            Exit Sub
-        End If
-        ComboBox1.Items.Clear()
-
-        For Each netadapter As NetworkInterface In nics
-            Dim intproperties As IPInterfaceProperties = netadapter.GetIPProperties()
-            ComboBox1.Items.Add(netadapter.Name)
-        Next
-        GetActiveNetworkInterfaceName()
-    End Sub
-
-    Private Sub ComboBox1_DropDown(sender As Object, e As EventArgs) Handles ComboBox1.DropDown
-        getinterfaces()
-
-    End Sub
-
-
-    Private Sub ChangeIPAddress(interfaceName As String, agrs As String
-                                )
-        Dim processStartInfo As New ProcessStartInfo()
-        processStartInfo.FileName = "netsh"
-        processStartInfo.Arguments = $"interface ip set address ""{interfaceName}"" {agrs}"
-        processStartInfo.RedirectStandardOutput = True
-        processStartInfo.UseShellExecute = False
-        processStartInfo.CreateNoWindow = True
-
-        Dim process As New Process()
-        process.StartInfo = processStartInfo
-        process.Start()
-        AddHandler process.OutputDataReceived, Sub()
-                                                   AddToOutputListBox(process.StandardOutput.ReadToEnd())
-                                               End Sub
-        'Dim output As String = process.StandardOutput
-        process.WaitForExit()
-
-        If process.ExitCode = 0 Then
-            AddToOutputListBox("IP address and subnet mask changed successfully.")
-        Else
-            AddToOutputListBox($"An error occurred")
-        End If
-        GetInterfaceInfo(interfaceName)
-    End Sub
-
-    Private Sub renewDHCP(interfaceName As String, agrs As String)
-        Dim processStartInfo As New ProcessStartInfo()
-        processStartInfo.FileName = "netsh"
-        processStartInfo.Arguments = $"{agrs}"
-        processStartInfo.RedirectStandardOutput = True
-        processStartInfo.UseShellExecute = False
-        processStartInfo.CreateNoWindow = True
-
-        Dim process As New Process()
-        process.StartInfo = processStartInfo
-        process.Start()
-        AddHandler process.OutputDataReceived, Sub()
-                                                   AddToOutputListBox(process.StandardOutput.ReadToEnd())
-                                               End Sub
-        'Dim output As String = process.StandardOutput
-        process.WaitForExit()
-
-        If process.ExitCode = 0 Then
-            AddToOutputListBox("")
-        Else
-            AddToOutputListBox($"An error occurred")
-        End If
-
-        GetInterfaceInfo(interfaceName)
-    End Sub
-
-    Private Sub AddToOutputListBox(message As String)
-        ListBox1.Items.Add(message)
-    End Sub
-
-    Private Sub GetInterfaceInfo(interfaceName As String)
-        Dim processStartInfo As New ProcessStartInfo()
-        processStartInfo.FileName = "ipconfig"
-        processStartInfo.Arguments = ""
-        processStartInfo.RedirectStandardOutput = True
-        processStartInfo.UseShellExecute = False
-        'processStartInfo.StandardOutputEncoding = System.Text.Encoding.GetEncoding("GBK") ' Set the appropriate encoding for Chinese characters
-        processStartInfo.CreateNoWindow = True
-
-        Dim process As New Process()
-        process.StartInfo = processStartInfo
-        process.Start()
-
-        Dim output As String = process.StandardOutput.ReadToEnd()
-        process.WaitForExit()
-
-        Dim interfaceInfoPattern As String = $"({interfaceName}:).+?IPv4 位址[ .]+: (.+?)\r?\n.+?子網路遮罩[ .]+: (.+?)\r?\n.+?預設閘道[ .]+: (.+?)\r?\n"
-        Dim match As Match = Regex.Match(output, interfaceInfoPattern, RegexOptions.Singleline)
-
-        If match.Success Then
-            Dim ipAddress As String = match.Groups(2).Value
-            Dim subnetMask As String = match.Groups(3).Value
-            Dim defaultGateway As String = match.Groups(4).Value
-
-            AddMessageToListBox($"介面卡: {interfaceName}")
-            AddMessageToListBox($"IPv4 位址: {ipAddress}")
-            AddMessageToListBox($"子網路遮罩: {subnetMask}")
-            AddMessageToListBox($"預設閘道: {defaultGateway}")
-        Else
-            AddMessageToListBox($"未找到接口 '{interfaceName}' 信息。")
-        End If
-    End Sub
-
-    Private Sub AddMessageToListBox(message As String)
-        ListBox1.Items.Add(message)
-    End Sub
-
-
-    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
-        ChangeIPAddress(ComboBox1.SelectedItem, $"static 192.168.1.{My.Settings.DefultIP} 255.255.255.0 192.168.1.1")
-    End Sub
-
-    Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
-        ChangeIPAddress(ComboBox1.SelectedItem, $"static 192.168.100.{My.Settings.DefultIP} 255.255.255.0 192.168.100.1")
-    End Sub
-
-    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
-        ChangeIPAddress(ComboBox1.SelectedItem, "static 192.168.125.199 255.255.255.0 192.168.125.1")
-    End Sub
-
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        ChangeIPAddress(ComboBox1.SelectedItem, "source = dhcp")
-        renewDHCP(ComboBox1.SelectedItem, "/release")
-        renewDHCP(ComboBox1.SelectedItem, "/renew")
-        'GetInterfaceInfo(ComboBox1.SelectedItem)
-    End Sub
-
-    Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-        ChangeIPAddress(ComboBox1.SelectedItem, $"static 192.168.0.{My.Settings.DefultIP} 255.255.255.0 192.168.0.1")
-    End Sub
-
-    Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox1.SelectedIndexChanged
-        If Not BackgroundWorker1.IsBusy() Then
-            BackgroundWorker1.RunWorkerAsync(ComboBox1.SelectedItem)
-        End If
-    End Sub
-
-    Private Sub GetActiveNetworkInterfaceName()
-        Dim activeNetworkInterface As NetworkInterface = GetActiveNetworkInterface()
-
-        If activeNetworkInterface IsNot Nothing Then
-            Dim interfaceName As String = activeNetworkInterface.Name
-            ComboBox1.SelectedItem = $"{interfaceName}"
-            AddMessageToListBox1($"正在使用的網卡名稱: {interfaceName}")
-        Else
-            AddMessageToListBox1("未找到正在使用的網卡。")
-        End If
-    End Sub
-
-    Private Function GetActiveNetworkInterface() As NetworkInterface
-        Dim networkInterfaces As NetworkInterface() = NetworkInterface.GetAllNetworkInterfaces()
-
-        For Each networkInterface As NetworkInterface In networkInterfaces
-            If networkInterface.OperationalStatus = OperationalStatus.Up Then
-                'AndAlso networkInterface.NetworkInterfaceType <> NetworkInterfaceType.Loopback Then
-                Return networkInterface
+    Private Function GetNetworkAdapters() As List(Of NetworkInterface)
+        Dim adapters As New List(Of NetworkInterface)
+        For Each nic As NetworkInterface In NetworkInterface.GetAllNetworkInterfaces()
+            If nic.OperationalStatus = OperationalStatus.Up AndAlso
+           (nic.NetworkInterfaceType = NetworkInterfaceType.Ethernet OrElse
+            nic.NetworkInterfaceType = NetworkInterfaceType.Wireless80211) Then
+                adapters.Add(nic)
             End If
         Next
-
-        Return Nothing
+        Return adapters
     End Function
+    Dim rbtn_list As List(Of Button) = New List(Of Button)
+
+    Private Sub DisplayNetworkAdapters()
+        Dim adapters = GetNetworkAdapters()
+        Dim rbtn_t As Button = btn_template
+        For Each b In rbtn_list
+            b.Dispose()
+        Next
+
+        For Each adapter In adapters
+
+            Dim rbtn As New Button With {
+                .Text = $"{adapter.Name}{vbCrLf}{adapter.Description}{vbCrLf}{adapter.GetPhysicalAddress().ToString()}{vbCrLf}",
+                .AutoSize = rbtn_t.AutoSize,
+                .Font = rbtn_t.Font,
+                .Name = $"rbtn_{adapter.Name.Trim}",
+                .Size = rbtn_t.Size,
+                .Parent = rbtn_t.Parent,
+                .BackColor = rbtn_t.BackColor,
+                .FlatStyle = rbtn_t.FlatStyle,
+                .ForeColor = rbtn_t.ForeColor,
+                .Padding = rbtn_t.Padding,
+                .Visible = True,
+                .Tag = adapter.Name,
+                .ImageAlign = rbtn_t.ImageAlign,
+                .TextImageRelation = rbtn_t.TextImageRelation,
+                .Image = IIf(adapter.Name = "Wi-Fi", My.Resources.wifi, My.Resources.wired_network_connection)
+            }
+
+            AddHandler rbtn.Click, AddressOf rbtn_Clicked
+
+            For Each ipInfo In adapter.GetIPProperties().UnicastAddresses
+                If ipInfo.Address.AddressFamily = Sockets.AddressFamily.InterNetwork Then
+                    rbtn.Text += $"{ipInfo.Address}{vbCrLf}"
+                End If
+            Next
+            rbtn_list.Add(rbtn)
+        Next
+    End Sub
+
+    Dim n_edit As String
+    Private Sub rbtn_Clicked(sender As Button, e As EventArgs)
+        n_edit = sender.Tag
+        Dim n_adapter As NetworkInterface = NetworkInterface.GetAllNetworkInterfaces().Where(Function(n) n.Name = n_edit).FirstOrDefault()
+        Dim ipv4 As UnicastIPAddressInformation = n_adapter.GetIPProperties().UnicastAddresses.Where(Function(n) n.Address.AddressFamily = Sockets.AddressFamily.InterNetwork).FirstOrDefault()
+        Dim gateway = n_adapter.GetIPProperties().GatewayAddresses
+        Label1.Text = n_adapter.Name
+        Label2.Text = n_adapter.Description
+        Label3.Text = n_adapter.GetPhysicalAddress().ToString()
+        Label4.Text = ipv4.Address.ToString()
+        IpTextBox1.Text = Label4.Text
+        IpTextBox2.Text = ipv4.IPv4Mask.ToString()
+        If gateway.Count <> 0 Then
+            IpTextBox3.Text = gateway.Item(0).Address.ToString()
+        Else
+            IpTextBox3.Text = ""
+        End If
+        Timer2.Enabled = True
+    End Sub
+
+
+
+    Dim loaded As Boolean
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        loaded = False
+
+        If Not IsAdministrator() And Not Debugger.IsAttached Then
+            RestartAsAdministrator()
+        End If
+
+        Dim currentVersion As Version = Assembly.GetExecutingAssembly().GetName().Version
+        ToolStripStatusLabel5.Text = currentVersion.ToString()
+
+        Dim currentProcess As Process = Process.GetCurrentProcess()
+        Dim processes() As Process = Process.GetProcessesByName(currentProcess.ProcessName)
+
+        For Each p As Process In processes
+            ' 檢查是否進程是當前的進程，如果不是則關閉它
+            If p.Id <> currentProcess.Id Then
+                Try
+                    ' 嘗試正常終止進程
+                    p.CloseMainWindow()
+                    ' 如果上面的方法失敗，強制終止進程
+                    p.Kill()
+                Catch ex As Exception
+                    ' 處理任何錯誤
+                    Console.WriteLine(ex.Message)
+                End Try
+            End If
+        Next
+        Timer_update_chk.Enabled = True
+        Timer1.Enabled = True
+        loaded = True
+        DisplayNetworkAdapters()
+    End Sub
+
 
     Private Async Function getGithubReleases() As Task(Of Dictionary(Of String, String))
         Dim result As New Dictionary(Of String, String)
@@ -218,12 +155,8 @@ Public Class Form1
 
     End Function
 
-    Private Sub ReqUpdata()
-
-    End Sub
-
-    Private Async Sub Timer2_Tick(sender As Object, e As EventArgs) Handles Timer2.Tick
-        Timer2.Enabled = False
+    Private Async Sub Timer2_Tick(sender As Object, e As EventArgs) Handles Timer_update_chk.Tick
+        Timer_update_chk.Enabled = False
 
         Dim ReleasesInfo As Dictionary(Of String, String) = Await getGithubReleases()
         If ReleasesInfo Is Nothing Then
@@ -254,56 +187,6 @@ Public Class Form1
 
     End Sub
 
-    Private Sub AddMessageToListBox1(message As String)
-        ListBox1.Items.Add(message)
-    End Sub
-    Dim loaded As Boolean
-    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        loaded = False
-
-        If Not IsAdministrator() And Not Debugger.IsAttached Then
-            RestartAsAdministrator()
-        End If
-
-        Dim currentVersion As Version = Assembly.GetExecutingAssembly().GetName().Version
-        ToolStripStatusLabel5.Text = currentVersion.ToString()
-
-        Dim currentProcess As Process = Process.GetCurrentProcess()
-        Dim processes() As Process = Process.GetProcessesByName(currentProcess.ProcessName)
-
-        For Each p As Process In processes
-            ' 檢查是否進程是當前的進程，如果不是則關閉它
-            If p.Id <> currentProcess.Id Then
-                Try
-                    ' 嘗試正常終止進程
-                    p.CloseMainWindow()
-                    ' 如果上面的方法失敗，強制終止進程
-                    p.Kill()
-                Catch ex As Exception
-                    ' 處理任何錯誤
-                    Console.WriteLine(ex.Message)
-                End Try
-            End If
-        Next
-
-        Button2.Text = $"設定為 192.168.1.{ My.Settings.DefultIP}"
-        Button4.Text = $"設定為 192.168.0.{ My.Settings.DefultIP}"
-        Button5.Text = $"設定為 192.168.100.{ My.Settings.DefultIP}"
-        ToolStripTextBox1.Text = My.Settings.DefultIP
-
-        getinterfaces()
-        Timer1.Enabled = True
-        Timer2.Enabled = True
-        loaded = True
-    End Sub
-
-    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
-        If Not BackgroundWorker1.IsBusy() Then
-            BackgroundWorker1.RunWorkerAsync(ComboBox1.SelectedItem)
-        End If
-    End Sub
-
-
     Private Function IsAdministrator() As Boolean
         Dim identity As WindowsIdentity = WindowsIdentity.GetCurrent()
         Dim principal As WindowsPrincipal = New WindowsPrincipal(identity)
@@ -328,61 +211,88 @@ Public Class Form1
         End Try
     End Sub
 
-    Private Sub ToolStripTextBox1_TextChanged(sender As Object, e As EventArgs) Handles ToolStripTextBox1.TextChanged
-        If loaded = False Then Return
-        If ToolStripTextBox1.Text <> "" Then
-            If Val(ToolStripTextBox1.Text) >= 0 And Val(ToolStripTextBox1.Text) <= 255 Then
-                My.Settings.DefultIP = ToolStripTextBox1.Text
-                My.Settings.Save()
-                Button2.Text = $"設定為 192.168.1.{ My.Settings.DefultIP}"
-                Button4.Text = $"設定為 192.168.0.{ My.Settings.DefultIP}"
-                Button5.Text = $"設定為 192.168.100.{ My.Settings.DefultIP}"
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        DisplayNetworkAdapters()
+    End Sub
+
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        SetIPv4Address(Label1.Text, IpTextBox1.Text, IpTextBox2.Text, IpTextBox3.Text)
+    End Sub
+
+    Private Sub EnableDHCP(adapterName As String)
+        Try
+            Dim processStartInfo As New ProcessStartInfo()
+            processStartInfo.FileName = "netsh"
+            processStartInfo.Arguments = $"interface ip set address ""{adapterName}"" dhcp"
+            processStartInfo.RedirectStandardOutput = True
+            processStartInfo.UseShellExecute = False
+            processStartInfo.CreateNoWindow = True
+
+            Dim process As New Process()
+            process.StartInfo = processStartInfo
+            process.Start()
+            Dim output As String = process.StandardOutput.ReadToEnd()
+            Debug.WriteLine(output)
+
+            process.WaitForExit()
+            If process.ExitCode = 0 Then
+                MessageBox.Show($"IPv4 設定已更新 {output}")
+            Else
+                MessageBox.Show($"An error occurred: {output}")
             End If
-        End If
+
+            ' MessageBox.Show("IPv4 設定已更新")
+        Catch ex As Exception
+            MessageBox.Show("設定 IPv4 時發生錯誤: " & ex.Message)
+        End Try
+    End Sub
+    Private Sub SetIPv4Address(adapterName As String, ip As String, subnet As String, gateway As String)
+        Try
+            Dim processStartInfo As New ProcessStartInfo()
+            processStartInfo.FileName = "netsh"
+            processStartInfo.Arguments = $"interface ip set address ""{adapterName}"" static {ip} {subnet} {gateway}"
+            processStartInfo.RedirectStandardOutput = True
+            processStartInfo.UseShellExecute = False
+            processStartInfo.CreateNoWindow = True
+
+            Dim process As New Process()
+            process.StartInfo = processStartInfo
+            process.Start()
+            Dim output As String = process.StandardOutput.ReadToEnd()
+            Debug.WriteLine(output)
+
+            process.WaitForExit()
+            If process.ExitCode = 0 Then
+                MessageBox.Show($"IPv4 設定已更新 {output}")
+            Else
+                MessageBox.Show($"An error occurred: {output}")
+            End If
+
+            ' MessageBox.Show("IPv4 設定已更新")
+        Catch ex As Exception
+            MessageBox.Show("設定 IPv4 時發生錯誤: " & ex.Message)
+        End Try
     End Sub
 
-    Private Sub BackgroundWorker1_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BackgroundWorker1.DoWork
-        Dim interfaceName = e.Argument
-        Dim processStartInfo As New ProcessStartInfo()
-        processStartInfo.FileName = "ipconfig"
-        processStartInfo.Arguments = ""
-        processStartInfo.RedirectStandardOutput = True
-        processStartInfo.UseShellExecute = False
-        'processStartInfo.StandardOutputEncoding = System.Text.Encoding.GetEncoding("GBK") ' Set the appropriate encoding for Chinese characters
-        processStartInfo.CreateNoWindow = True
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles btn_dhcp.Click
+        EnableDHCP(Label1.Text)
+    End Sub
 
-        Dim process As New Process()
-        process.StartInfo = processStartInfo
-        process.Start()
-
-        Dim output As String = process.StandardOutput.ReadToEnd()
-        process.WaitForExit()
-
-        Dim interfaceInfoPattern As String = $"({interfaceName}:).+?IPv4 位址[ .]+: (.+?)\r?\n.+?子網路遮罩[ .]+: (.+?)\r?\n.+?預設閘道[ .]+: (.+?)\r?\n"
-        Dim match As Match = Regex.Match(output, interfaceInfoPattern, RegexOptions.Singleline)
-
-        If match.Success Then
-            Dim ipAddress As String = match.Groups(2).Value
-            Dim subnetMask As String = match.Groups(3).Value
-            Dim defaultGateway As String = match.Groups(4).Value
-            Me.Invoke(Sub()
-                          ListBox1.Items.Clear()
-                          AddMessageToListBox($"介面卡: {interfaceName}")
-                          AddMessageToListBox($"IPv4 位址: {ipAddress}")
-                          AddMessageToListBox($"子網路遮罩: {subnetMask}")
-                          AddMessageToListBox($"預設閘道: {defaultGateway}")
-                      End Sub)
-
+    Private Sub Timer2_Tick_1(sender As Object, e As EventArgs) Handles Timer2.Tick
+        Dim n_adapter As NetworkInterface = NetworkInterface.GetAllNetworkInterfaces().Where(Function(n) n.Name = n_edit).FirstOrDefault()
+        Dim ipv4 As UnicastIPAddressInformation = n_adapter.GetIPProperties().UnicastAddresses.Where(Function(n) n.Address.AddressFamily = Sockets.AddressFamily.InterNetwork).FirstOrDefault()
+        Label1.Text = n_adapter.Name
+        Label2.Text = n_adapter.Description
+        Label3.Text = n_adapter.GetPhysicalAddress().ToString()
+        If ipv4 IsNot Nothing Then
+            Label4.Text = ipv4.Address.ToString()
         Else
-            Me.Invoke(Sub()
-                          ListBox1.Items.Clear()
-                          AddMessageToListBox($"未找到接口 '{interfaceName}' 信息。")
-                      End Sub)
-
+            Label4.Text = ""
         End If
-
-
     End Sub
 
+    Private Sub Button_Click(sender As Button, e As EventArgs) Handles Button2.Click, Button3.Click, Button4.Click, Button5.Click
+
+    End Sub
 
 End Class
