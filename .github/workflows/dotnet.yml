@@ -17,13 +17,13 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x  # 指定 .NET 6 版本
-
+      
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore -s ./QuickIPchange/
 
     - name: Build Windows Forms App
       run: dotnet build --configuration Release
-
+    
     - name: Publish Artifact
       uses: actions/upload-artifact@v2
       with:
