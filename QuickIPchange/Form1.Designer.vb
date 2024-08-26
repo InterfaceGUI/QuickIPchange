@@ -101,7 +101,7 @@ Partial Class Form1
         ' ToolStripStatusLabel3
         ' 
         ToolStripStatusLabel3.Name = "ToolStripStatusLabel3"
-        ToolStripStatusLabel3.Size = New Size(517, 18)
+        ToolStripStatusLabel3.Size = New Size(564, 18)
         ToolStripStatusLabel3.Spring = True
         ' 
         ' ToolStripStatusLabel4
@@ -445,6 +445,7 @@ Partial Class Form1
         ' 
         ' Timer2
         ' 
+        Timer2.Interval = 1000
         ' 
         ' Form1
         ' 
