@@ -295,7 +295,7 @@ Public Class Form1
             Label4.Text = ""
         End If
     End Sub
-    '看展
+
     Private Sub Button_Click(sender As Button, e As EventArgs) Handles Button2.Click, Button3.Click, Button4.Click, Button5.Click
         SetIPv4Address(Label1.Text, $"192.168.{sender.Tag}.{ My.Settings.DefultIP}", IpTextBox2.Text, IpTextBox3.Text)
     End Sub
