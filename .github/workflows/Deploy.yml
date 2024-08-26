@@ -21,7 +21,7 @@ jobs:
       run: dotnet nuget add source ${{ github.workspace }}/nuget -n local
 
     - name: Restore dependencies
-      run: dotnet restore --source ${{ github.workspace }}/nuget --source https://api.nuget.org/v3/index.json
+      run: dotnet restore -s ${{ github.workspace }}/nuget
 
     - name: Publish Windows Forms App with ClickOnce without version
       if: "!startsWith(github.ref, 'refs/tags/')"
