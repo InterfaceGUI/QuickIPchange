@@ -25,6 +25,8 @@ Partial Class Form1
         components = New ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Form1))
         StatusStrip1 = New StatusStrip()
+        ToolStripStatusLabel1 = New ToolStripStatusLabel()
+        ToolStripTextBox2 = New ToolStripTextBox()
         ToolStripStatusLabel2 = New ToolStripStatusLabel()
         ToolStripStatusLabel3 = New ToolStripStatusLabel()
         ToolStripStatusLabel4 = New ToolStripStatusLabel()
@@ -71,48 +73,59 @@ Partial Class Form1
         ' StatusStrip1
         ' 
         StatusStrip1.BackColor = SystemColors.Control
-        StatusStrip1.Items.AddRange(New ToolStripItem() {ToolStripStatusLabel2, ToolStripStatusLabel3, ToolStripStatusLabel4, ToolStripStatusLabel5, ToolStripStatusLabel6, ToolStripStatusLabel7})
-        StatusStrip1.Location = New Point(0, 494)
+        StatusStrip1.Items.AddRange(New ToolStripItem() {ToolStripStatusLabel1, ToolStripTextBox2, ToolStripStatusLabel2, ToolStripStatusLabel3, ToolStripStatusLabel4, ToolStripStatusLabel5, ToolStripStatusLabel6, ToolStripStatusLabel7})
+        StatusStrip1.Location = New Point(0, 493)
         StatusStrip1.Name = "StatusStrip1"
-        StatusStrip1.Size = New Size(742, 22)
+        StatusStrip1.Size = New Size(742, 23)
         StatusStrip1.TabIndex = 4
         StatusStrip1.Text = "StatusStrip1"
+        ' 
+        ' ToolStripStatusLabel1
+        ' 
+        ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
+        ToolStripStatusLabel1.Size = New Size(70, 18)
+        ToolStripStatusLabel1.Text = "xxx.xxx.xxx."
+        ' 
+        ' ToolStripTextBox2
+        ' 
+        ToolStripTextBox2.Name = "ToolStripTextBox2"
+        ToolStripTextBox2.Size = New Size(35, 23)
         ' 
         ' ToolStripStatusLabel2
         ' 
         ToolStripStatusLabel2.BackColor = SystemColors.Control
         ToolStripStatusLabel2.Name = "ToolStripStatusLabel2"
-        ToolStripStatusLabel2.Size = New Size(10, 17)
+        ToolStripStatusLabel2.Size = New Size(10, 18)
         ToolStripStatusLabel2.Text = "|"
         ' 
         ' ToolStripStatusLabel3
         ' 
         ToolStripStatusLabel3.Name = "ToolStripStatusLabel3"
-        ToolStripStatusLabel3.Size = New Size(671, 17)
+        ToolStripStatusLabel3.Size = New Size(517, 18)
         ToolStripStatusLabel3.Spring = True
         ' 
         ' ToolStripStatusLabel4
         ' 
         ToolStripStatusLabel4.Name = "ToolStripStatusLabel4"
-        ToolStripStatusLabel4.Size = New Size(34, 17)
+        ToolStripStatusLabel4.Size = New Size(34, 18)
         ToolStripStatusLabel4.Text = "版本:"
         ' 
         ' ToolStripStatusLabel5
         ' 
         ToolStripStatusLabel5.Name = "ToolStripStatusLabel5"
-        ToolStripStatusLabel5.Size = New Size(12, 17)
+        ToolStripStatusLabel5.Size = New Size(12, 18)
         ToolStripStatusLabel5.Text = "-"
         ' 
         ' ToolStripStatusLabel6
         ' 
         ToolStripStatusLabel6.Name = "ToolStripStatusLabel6"
-        ToolStripStatusLabel6.Size = New Size(0, 17)
+        ToolStripStatusLabel6.Size = New Size(0, 18)
         ' 
         ' ToolStripStatusLabel7
         ' 
         ToolStripStatusLabel7.Image = CType(resources.GetObject("ToolStripStatusLabel7.Image"), Image)
         ToolStripStatusLabel7.Name = "ToolStripStatusLabel7"
-        ToolStripStatusLabel7.Size = New Size(16, 17)
+        ToolStripStatusLabel7.Size = New Size(16, 18)
         ToolStripStatusLabel7.Visible = False
         ' 
         ' Timer_update_chk
@@ -499,4 +512,6 @@ Partial Class Form1
     Friend WithEvents Button3 As Button
     Friend WithEvents Button4 As Button
     Friend WithEvents Button5 As Button
+    Friend WithEvents ToolStripStatusLabel1 As ToolStripStatusLabel
+    Friend WithEvents ToolStripTextBox2 As ToolStripTextBox
 End Class

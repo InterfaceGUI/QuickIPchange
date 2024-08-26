@@ -112,6 +112,11 @@ Public Class Form1
         Timer1.Enabled = True
         loaded = True
         DisplayNetworkAdapters()
+        ToolStripTextBox2.Text = My.Settings.DefultIP
+        Label1.Text = ""
+        Label2.Text = ""
+        Label3.Text = ""
+        Label4.Text = ""
     End Sub
 
 
@@ -292,7 +297,19 @@ Public Class Form1
     End Sub
 
     Private Sub Button_Click(sender As Button, e As EventArgs) Handles Button2.Click, Button3.Click, Button4.Click, Button5.Click
-
+        SetIPv4Address(Label1.Text, $"192.168.{sender.Tag}.{ My.Settings.DefultIP}", IpTextBox2.Text, IpTextBox3.Text)
     End Sub
 
+    Private Sub ToolStripTextBox2_Click(sender As Object, e As EventArgs) Handles ToolStripTextBox2.TextChanged
+        If ToolStripTextBox2.Text <> "" Then
+            If Val(ToolStripTextBox2.Text) >= 0 And Val(ToolStripTextBox2.Text) <= 255 Then
+                My.Settings.DefultIP = ToolStripTextBox2.Text
+                My.Settings.Save()
+                Button2.Text = $"ABB (192.168.125.{ My.Settings.DefultIP})"
+                Button3.Text = $"WSI CNC(192.168.1.{ My.Settings.DefultIP})"
+                Button4.Text = $"WSI AutoLine (192.168.100.{ My.Settings.DefultIP})"
+                Button5.Text = $"192.168.0.{ My.Settings.DefultIP}"
+            End If
+        End If
+    End Sub
 End Class
