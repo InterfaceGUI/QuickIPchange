@@ -17,8 +17,11 @@ jobs:
       with:
         dotnet-version: 6.0.x # 指定 .NET 6 版本
           
+    - name: Add local NuGet source
+      run: dotnet nuget add source ${{ github.workspace }}/nuget -n local
+
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore --source ${{ github.workspace }}/nuget --source https://api.nuget.org/v3/index.json
 
     - name: Publish Windows Forms App with ClickOnce without version
       if: "!startsWith(github.ref, 'refs/tags/')"
