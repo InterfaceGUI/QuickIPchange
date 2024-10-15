@@ -37,7 +37,7 @@ jobs:
       run: dotnet publish -c Release -r win-x64 --self-contained false /p:PublishSingleFile=true /p:ClickOnceDeploymentBuild=true /p:PublishProfile="./QuickIPchange/My Project/PublishProfiles/ClickOnceProfile.pubxml" /p:AssemblyVersion=${{  github.ref_name }} /p:Version=${{  github.ref_name }}
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: clickonce-artifact
         path: ./QuickIPchange/bin/Release/net8.0-windows7.0/win-x64/publish/QuickIPchange.exe
