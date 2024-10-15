@@ -26,7 +26,7 @@ jobs:
       run: dotnet build --configuration Release
     
     - name: Publish Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: windows-forms-app  # 指定 artifact 的名称
         path: ./QuickIPchange/bin/Release/net6.0-windows/QuickIPchange.exe  # 指定要上传的应用程序的路径
