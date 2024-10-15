@@ -4,7 +4,7 @@ Imports System.Management
 Imports System.Reflection
 Imports System.Security.Principal
 Imports Newtonsoft.Json.Linq
-
+' 粗略版本，程式非常粗糙，建議使用V1 版本
 Public Class Form1
 
     Private Function GetNetworkAdapters() As List(Of NetworkInterface)
@@ -111,7 +111,7 @@ Public Class Form1
                     p.Kill()
                 Catch ex As Exception
                     ' 處理任何錯誤
-                    Console.WriteLine(ex.Message)
+                    Debug.WriteLine(ex.Message)
                 End Try
             End If
         Next
@@ -124,6 +124,8 @@ Public Class Form1
         Label2.Text = ""
         Label3.Text = ""
         Label4.Text = ""
+
+        '關閉按鈕， 防止未選擇網卡時操作
         btn_dhcp.Enabled = False
         Button1.Enabled = False
         Button2.Enabled = False
@@ -133,7 +135,7 @@ Public Class Form1
 
     End Sub
 
-
+#Region "檢查更新&檢什UAC權限"
     Private Async Function getGithubReleases() As Task(Of Dictionary(Of String, String))
         Dim result As New Dictionary(Of String, String)
         Dim apiUrl As String = "https://api.github.com/repos/InterfaceGUI/QuickIPchange/releases/latest"
@@ -199,9 +201,9 @@ Public Class Form1
 
         ElseIf comparisonResult = 0 Then
             ToolStripStatusLabel6.Text = $"已是最新版本"
-            Console.WriteLine($"目前版本 {currentVersion} 已是最新版本")
+            Debug.WriteLine($"目前版本 {currentVersion} 已是最新版本")
         Else
-            Console.WriteLine($"目前版本 {currentVersion} 高於 GitHub 上的版本 {latestVersion}")
+            Debug.WriteLine($"目前版本 {currentVersion} 高於 GitHub 上的版本 {latestVersion}")
         End If
 
     End Sub
@@ -229,6 +231,8 @@ Public Class Form1
             ' Handle the exception if elevation fails
         End Try
     End Sub
+
+#End Region
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         DisplayNetworkAdapters()
