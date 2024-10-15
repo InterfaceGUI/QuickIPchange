@@ -374,7 +374,7 @@ Partial Class Form1
         ' IpTextBox3
         ' 
         IpTextBox3.AutoSize = True
-        IpTextBox3.BackColor = Color.Transparent
+        IpTextBox3.BackColor = Color.FromArgb(CByte(31), CByte(31), CByte(31))
         IpTextBox3.Location = New Point(62, 66)
         IpTextBox3.Margin = New Padding(4, 2, 4, 2)
         IpTextBox3.Name = "IpTextBox3"
@@ -388,7 +388,7 @@ Partial Class Form1
         ' IpTextBox1
         ' 
         IpTextBox1.AutoSize = True
-        IpTextBox1.BackColor = Color.Transparent
+        IpTextBox1.BackColor = Color.FromArgb(CByte(31), CByte(31), CByte(31))
         IpTextBox1.Location = New Point(62, 15)
         IpTextBox1.Margin = New Padding(4, 2, 4, 2)
         IpTextBox1.Name = "IpTextBox1"
@@ -402,7 +402,7 @@ Partial Class Form1
         ' IpTextBox2
         ' 
         IpTextBox2.AutoSize = True
-        IpTextBox2.BackColor = Color.Transparent
+        IpTextBox2.BackColor = Color.FromArgb(CByte(31), CByte(31), CByte(31))
         IpTextBox2.Location = New Point(62, 42)
         IpTextBox2.Margin = New Padding(4, 2, 4, 2)
         IpTextBox2.Name = "IpTextBox2"

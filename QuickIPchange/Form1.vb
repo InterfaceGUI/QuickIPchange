@@ -76,6 +76,13 @@ Public Class Form1
             IpTextBox3.Text = ""
         End If
         Timer2.Enabled = True
+
+        btn_dhcp.Enabled = True
+        Button1.Enabled = True
+        Button2.Enabled = True
+        Button3.Enabled = True
+        Button4.Enabled = True
+        Button5.Enabled = True
     End Sub
 
 
@@ -117,6 +124,13 @@ Public Class Form1
         Label2.Text = ""
         Label3.Text = ""
         Label4.Text = ""
+        btn_dhcp.Enabled = False
+        Button1.Enabled = False
+        Button2.Enabled = False
+        Button3.Enabled = False
+        Button4.Enabled = False
+        Button5.Enabled = False
+
     End Sub
 
 
@@ -312,4 +326,6 @@ Public Class Form1
             End If
         End If
     End Sub
+
+
 End Class
