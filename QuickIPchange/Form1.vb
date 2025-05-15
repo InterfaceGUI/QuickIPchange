@@ -135,7 +135,7 @@ Public Class Form1
 
     End Sub
 
-#Region "檢查更新&檢查UAC權限"
+#Region "檢查更新&檢什UAC權限"
     Private Async Function getGithubReleases() As Task(Of Dictionary(Of String, String))
         Dim result As New Dictionary(Of String, String)
         Dim apiUrl As String = "https://api.github.com/repos/InterfaceGUI/QuickIPchange/releases/latest"
@@ -273,7 +273,7 @@ Public Class Form1
         Try
             Dim processStartInfo As New ProcessStartInfo()
             processStartInfo.FileName = "netsh"
-            processStartInfo.Arguments = $"interface ip set address ""{adapterName}"" static {ip} {subnet} {IIf(gateway = "", "0.0.0.0", gateway)}"
+            processStartInfo.Arguments = $"interface ip set address ""{adapterName}"" static {ip} {subnet} {gateway}"
             processStartInfo.RedirectStandardOutput = True
             processStartInfo.UseShellExecute = False
             processStartInfo.CreateNoWindow = True
