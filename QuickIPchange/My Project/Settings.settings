@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="DefultIP" Type="System.String" Scope="User">
-      <Value Profile="(Default)">66</Value>
+      <Value Profile="(Default)">253</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -137,22 +137,23 @@ Partial Class Form1
         FlowLayoutPanel1.AutoScroll = True
         FlowLayoutPanel1.Controls.Add(btn_template)
         FlowLayoutPanel1.Dock = DockStyle.Fill
-        FlowLayoutPanel1.Location = New Point(3, 19)
+        FlowLayoutPanel1.Location = New Point(3, 27)
         FlowLayoutPanel1.Name = "FlowLayoutPanel1"
         FlowLayoutPanel1.Padding = New Padding(5)
-        FlowLayoutPanel1.Size = New Size(306, 452)
+        FlowLayoutPanel1.Size = New Size(306, 444)
         FlowLayoutPanel1.TabIndex = 5
         ' 
         ' btn_template
         ' 
         btn_template.BackColor = SystemColors.Control
+        btn_template.Font = New Font("Microsoft JhengHei UI", 9F)
         btn_template.ForeColor = Color.Black
         btn_template.Image = My.Resources.Resources.wired_network_connection
         btn_template.ImageAlign = ContentAlignment.MiddleLeft
         btn_template.Location = New Point(8, 8)
         btn_template.Name = "btn_template"
         btn_template.Padding = New Padding(5, 0, 0, 0)
-        btn_template.Size = New Size(273, 88)
+        btn_template.Size = New Size(283, 88)
         btn_template.TabIndex = 9
         btn_template.Text = "Wi-Fi" & vbCrLf & "Intel(R) Wi-Fi 6 AX200 160MHz" & vbCrLf & "DC41A91ED0DE" & vbCrLf & "192.168.1.173" & vbCrLf
         btn_template.TextAlign = ContentAlignment.MiddleLeft
@@ -164,6 +165,7 @@ Partial Class Form1
         ' 
         GroupBox1.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left
         GroupBox1.Controls.Add(FlowLayoutPanel1)
+        GroupBox1.Font = New Font("Microsoft JhengHei UI", 14F)
         GroupBox1.ForeColor = Color.White
         GroupBox1.Location = New Point(9, 10)
         GroupBox1.Name = "GroupBox1"

@@ -56,7 +56,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("66")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("253")>  _
         Public Property DefultIP() As String
             Get
                 Return CType(Me("DefultIP"),String)

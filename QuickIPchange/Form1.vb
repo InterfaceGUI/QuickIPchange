@@ -315,7 +315,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button_Click(sender As Button, e As EventArgs) Handles Button2.Click, Button3.Click, Button4.Click, Button5.Click
-        SetIPv4Address(Label1.Text, $"192.168.{sender.Tag}.{ My.Settings.DefultIP}", IpTextBox2.Text, IpTextBox3.Text)
+        SetIPv4Address(Label1.Text, $"192.168.{sender.Tag}.{ My.Settings.DefultIP}", IpTextBox2.Text, IIf(IpTextBox3.Text = "...", "", IpTextBox3.Text))
     End Sub
 
     Private Sub ToolStripTextBox2_Click(sender As Object, e As EventArgs) Handles ToolStripTextBox2.TextChanged
