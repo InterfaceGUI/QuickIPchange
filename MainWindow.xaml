@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:QuickIPChange"
         mc:Ignorable="d"
         Title="QuickIPChange - 快速 IP 切換工具"
+        Icon="Assets/app.ico"
         Height="800" Width="900"
         MinHeight="720" MinWidth="860"
         WindowStartupLocation="CenterScreen"
