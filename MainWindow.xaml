@@ -17,7 +17,7 @@
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Padding" Value="16"/>
         </Style>
         <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="FontSize" Value="15"/>
@@ -37,8 +37,9 @@
     </Window.Resources>
 
     <Grid>
+        <Grid x:Name="ContentRoot">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="300"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -92,7 +93,7 @@
         </Grid>
 
         <!-- 右側：詳細資訊與設定 -->
-        <Grid Grid.Column="1" Margin="20">
+        <Grid Grid.Column="1" Margin="12">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -101,7 +102,7 @@
             </Grid.RowDefinitions>
 
             <!-- 詳細資訊 -->
-            <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,20">
+            <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,12">
                 <Grid>
                     <Grid x:Name="DetailPanel" Visibility="Collapsed">
                         <Grid.ColumnDefinitions>
@@ -164,7 +165,7 @@
             </Border>
 
             <!-- 快速切換配置 -->
-            <Border Grid.Row="1" x:Name="QuickPanel" Style="{StaticResource Card}" Margin="0,0,0,20">
+            <Border Grid.Row="1" x:Name="QuickPanel" Style="{StaticResource Card}" Margin="0,0,0,12">
                 <StackPanel>
                     <TextBlock Text="快速切換配置" Style="{StaticResource SectionTitle}"/>
                     <TextBlock Text="左鍵套用，右鍵編輯或刪除"
@@ -244,5 +245,9 @@
                 </Grid>
             </Border>
         </Grid>
+        </Grid>
+
+        <!-- 視窗內的配置編輯面板，覆蓋在內容之上 -->
+        <local:ConfigEditor x:Name="ConfigEditorPanel"/>
     </Grid>
 </Window>

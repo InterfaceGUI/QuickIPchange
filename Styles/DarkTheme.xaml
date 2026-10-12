@@ -11,6 +11,8 @@
     <SolidColorBrush x:Key="BorderBrush" Color="#555555"/>
     <SolidColorBrush x:Key="HoverBrush" Color="#2D2D30"/>
     <SolidColorBrush x:Key="SelectedBrush" Color="#0F6CBD"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FF6B6B"/>
+    <SolidColorBrush x:Key="OverlayBrush" Color="#B3000000"/>
 
     <!-- Window 樣式 -->
     <Style TargetType="Window">

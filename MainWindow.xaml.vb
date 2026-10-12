@@ -204,7 +204,7 @@ Class MainWindow
     Private Async Function ApplyConfigAsync(config As IPConfiguration, successMessage As String) As Task
         Dim adapter = _currentAdapter
         Await RunNetworkOperationAsync(
-            Function() NetworkService.ApplyIPConfigurationAsync(adapter.Name, config),
+            Function() NetworkService.ApplyIPConfigurationAsync(adapter, config),
             successMessage)
     End Function
 
@@ -253,20 +253,36 @@ Class MainWindow
     End Sub
 
     Private Function CreateQuickConfigButton(config As IPConfiguration) As Button
-        Dim summary = config.IPAddress
-        If Not String.IsNullOrEmpty(config.Gateway) Then summary &= $" → {config.Gateway}"
+        Dim content As New StackPanel
+        content.Children.Add(New TextBlock With {
+            .Text = config.ConfigName,
+            .FontWeight = FontWeights.SemiBold,
+            .HorizontalAlignment = HorizontalAlignment.Center
+        })
+        content.Children.Add(New TextBlock With {
+            .Text = config.IPAddress,
+            .FontSize = 11,
+            .Foreground = TryCast(FindResource("SecondaryForegroundBrush"), Brush),
+            .HorizontalAlignment = HorizontalAlignment.Center,
+            .Margin = New Thickness(0, 2, 0, 0)
+        })
+
+        Dim tooltip = $"IP：{config.IPAddress}{vbCrLf}遮罩：{config.SubnetMask}"
+        If Not String.IsNullOrEmpty(config.Gateway) Then tooltip &= $"{vbCrLf}閘道：{config.Gateway}"
+        If Not String.IsNullOrEmpty(config.DNS1) Then tooltip &= $"{vbCrLf}DNS：{config.DNS1}" & If(String.IsNullOrEmpty(config.DNS2), "", $", {config.DNS2}")
 
         Dim btn As New Button With {
-            .Content = config.ConfigName,
-            .ToolTip = summary,
-            .Margin = New Thickness(0, 0, 10, 10),
-            .Padding = New Thickness(16, 8, 16, 8),
+            .Content = content,
+            .ToolTip = tooltip,
+            .Margin = New Thickness(0, 0, 8, 8),
+            .Padding = New Thickness(14, 6, 14, 6),
+            .MinWidth = 120,
             .Style = TryCast(FindResource("SecondaryButton"), Style)
         }
         AddHandler btn.Click, Async Sub() Await ApplyQuickConfigAsync(config)
 
         Dim editItem As New MenuItem With {.Header = "編輯"}
-        AddHandler editItem.Click, Sub() EditConfig(config)
+        AddHandler editItem.Click, Async Sub() Await EditConfigAsync(config)
 
         Dim deleteItem As New MenuItem With {.Header = "刪除"}
         AddHandler deleteItem.Click, Sub() DeleteConfig(config)
@@ -292,23 +308,23 @@ Class MainWindow
         Await ApplyConfigAsync(config, $"已成功套用配置 '{config.ConfigName}'")
     End Function
 
-    Private Sub AddConfig_Click(sender As Object, e As RoutedEventArgs)
-        Dim dialog As New ConfigDialog With {.Owner = Me}
-        If dialog.ShowDialog() = True Then
-            _configStorage.Add(dialog.Configuration.Clone())
-            SaveConfigsToFile()
-            RenderQuickConfigs()
-        End If
+    Private Async Sub AddConfig_Click(sender As Object, e As RoutedEventArgs)
+        Dim result = Await ConfigEditorPanel.ShowAsync(Nothing)
+        If result Is Nothing Then Return
+
+        _configStorage.Add(result)
+        SaveConfigsToFile()
+        RenderQuickConfigs()
     End Sub
 
-    Private Sub EditConfig(config As IPConfiguration)
-        Dim dialog As New ConfigDialog(config) With {.Owner = Me}
-        If dialog.ShowDialog() = True Then
-            config.CopyFrom(dialog.Configuration)
-            SaveConfigsToFile()
-            RenderQuickConfigs()
-        End If
-    End Sub
+    Private Async Function EditConfigAsync(config As IPConfiguration) As Task
+        Dim result = Await ConfigEditorPanel.ShowAsync(config)
+        If result Is Nothing Then Return
+
+        config.CopyFrom(result)
+        SaveConfigsToFile()
+        RenderQuickConfigs()
+    End Function
 
     Private Sub DeleteConfig(config As IPConfiguration)
         Dim result = MessageBox.Show(Me, $"確定要刪除配置 '{config.ConfigName}' 嗎？", "確認刪除",

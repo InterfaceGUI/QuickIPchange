@@ -1,5 +1,6 @@
 Imports System.Diagnostics
 Imports System.Globalization
+Imports Microsoft.Win32
 Imports System.Net.NetworkInformation
 Imports System.Net.Sockets
 Imports System.Text
@@ -31,8 +32,11 @@ Public Class NetworkService
 
                 Dim props = nic.GetIPProperties()
 
+                ' 可能同時存在靜態位址與 169.254.x 自動私有位址（APIPA），優先取非 APIPA 的
                 Dim unicast = props.UnicastAddresses.
-                    FirstOrDefault(Function(u) u.Address.AddressFamily = AddressFamily.InterNetwork)
+                    Where(Function(u) u.Address.AddressFamily = AddressFamily.InterNetwork).
+                    OrderBy(Function(u) If(IsLinkLocal(u.Address), 1, 0)).
+                    FirstOrDefault()
                 Dim gateway = props.GatewayAddresses.
                     Select(Function(g) g.Address).
                     FirstOrDefault(Function(a) a.AddressFamily = AddressFamily.InterNetwork)
@@ -84,6 +88,11 @@ Public Class NetworkService
         End Select
     End Function
 
+    Private Shared Function IsLinkLocal(address As Net.IPAddress) As Boolean
+        Dim b = address.GetAddressBytes()
+        Return b.Length = 4 AndAlso b(0) = 169 AndAlso b(1) = 254
+    End Function
+
     Private Shared Function IsVirtualAdapter(description As String) As Boolean
         If String.IsNullOrEmpty(description) Then Return False
         Dim lower = description.ToLowerInvariant()
@@ -97,7 +106,8 @@ Public Class NetworkService
     End Function
 
     ''' <summary>套用靜態 IP。閘道留空則移除預設閘道；DNS 皆留空則不變更 DNS。</summary>
-    Public Shared Async Function ApplyIPConfigurationAsync(adapterName As String, config As IPConfiguration) As Task
+    Public Shared Async Function ApplyIPConfigurationAsync(adapter As NetworkAdapterInfo, config As IPConfiguration) As Task
+        Dim adapterName = adapter.Name
         Dim gatewayArg = If(IPValidator.IsEmptyOrZero(config.Gateway), "none", config.Gateway.Trim())
 
         Await RunNetshAsync(
@@ -119,7 +129,30 @@ Public Class NetworkService
                     "新增 DNS")
             Next
         End If
+
+        ' Windows 限制：網卡未連線時 netsh / WMI 都不會真的關閉 DHCP（登錄檔 EnableDHCP 仍為 1），
+        ' 插線後仍會走 DHCP。這裡比照「網路連線」控制台的做法直接寫登錄檔。
+        If Not adapter.IsConnected AndAlso IsDhcpEnabledNow(adapter.Id) Then
+            SetRegistryDhcpFlag(adapter.Id, enabled:=False)
+        End If
     End Function
+
+    Private Shared Function IsDhcpEnabledNow(interfaceId As String) As Boolean
+        Try
+            Dim nic = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(Function(n) n.Id = interfaceId)
+            Return If(nic?.GetIPProperties().GetIPv4Properties()?.IsDhcpEnabled, False)
+        Catch
+            Return False
+        End Try
+    End Function
+
+    Private Shared Sub SetRegistryDhcpFlag(interfaceId As String, enabled As Boolean)
+        Dim keyPath = $"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{interfaceId}"
+        Using key = Registry.LocalMachine.OpenSubKey(keyPath, writable:=True)
+            If key Is Nothing Then Throw New InvalidOperationException("找不到介面的 TCP/IP 登錄檔設定")
+            key.SetValue("EnableDHCP", If(enabled, 1, 0), RegistryValueKind.DWord)
+        End Using
+    End Sub
 
     ''' <summary>切換為 DHCP（位址與 DNS）</summary>
     Public Shared Async Function SetDHCPAsync(adapterName As String, isAlreadyDhcp As Boolean) As Task
