@@ -1,0 +1,38 @@
+# V3 發布流程：推送 3.x.y 格式的 tag 時，建置單一 exe 並建立 GitHub Release。
+#
+# 一律標記為 pre-release：V1/V2 的自動更新讀取 releases/latest，
+# 該端點會略過 pre-release，因此舊版不會誤抓到 V3；
+# V3 自己的 UpdateService 會列出所有 releases 並只挑主版號為 3 的版本。
+name: Release V3
+
+on:
+  push:
+    tags:
+      - "3.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish single-file exe
+        run: >
+          dotnet publish QuickIPChange.vbproj -c Release -r win-x64 --self-contained false
+          -p:PublishSingleFile=true -p:Version=${{ github.ref_name }}
+          -o publish
+
+      - name: Create pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          name: QuickIPChange V3 ${{ github.ref_name }}
+          generate_release_notes: true
+          files: publish/QuickIPChange.exe

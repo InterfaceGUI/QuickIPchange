@@ -37,6 +37,9 @@ Class MainWindow
         _refreshTimer = New Threading.DispatcherTimer With {.Interval = RefreshInterval}
         AddHandler _refreshTimer.Tick, AddressOf RefreshTimer_Tick
         _refreshTimer.Start()
+
+        UpdateService.CleanupLeftovers()
+        Await CheckForUpdateAsync()
     End Sub
 
     Private Sub MainWindow_Closing(sender As Object, e As ComponentModel.CancelEventArgs) Handles Me.Closing
@@ -379,6 +382,61 @@ Class MainWindow
             SaveConfigsToFile()
             RenderQuickConfigs()
         End If
+    End Sub
+
+#End Region
+
+#Region "自動更新"
+
+    Private _pendingUpdate As UpdateInfo
+    Private _updateCts As Threading.CancellationTokenSource
+
+    Private Async Function CheckForUpdateAsync() As Task
+        Dim info = Await UpdateService.CheckAsync()
+        If info Is Nothing Then Return
+
+        _pendingUpdate = info
+        UpdateBannerText.Text = $"有新版本 {info.Version.ToString(3)} 可用（目前 {UpdateService.CurrentVersion.ToString(3)}）"
+        UpdateBanner.ToolTip = If(String.IsNullOrWhiteSpace(info.ReleaseNotes), Nothing, info.ReleaseNotes)
+        UpdateProgress.Visibility = Visibility.Collapsed
+        UpdateNowButton.Visibility = Visibility.Visible
+        UpdateDismissButton.Visibility = Visibility.Visible
+        UpdateBanner.Visibility = Visibility.Visible
+    End Function
+
+    Private Sub UpdateDismiss_Click(sender As Object, e As RoutedEventArgs)
+        UpdateBanner.Visibility = Visibility.Collapsed
+    End Sub
+
+    Private Async Sub UpdateNow_Click(sender As Object, e As RoutedEventArgs)
+        Dim info = _pendingUpdate
+        If info Is Nothing Then Return
+
+        If Debugger.IsAttached Then
+            _notifier?.ShowInformation("偵錯中不進行自動更新", _notifierOptions)
+            Return
+        End If
+
+        UpdateNowButton.Visibility = Visibility.Collapsed
+        UpdateDismissButton.Visibility = Visibility.Collapsed
+        UpdateProgress.Value = 0
+        UpdateProgress.Visibility = Visibility.Visible
+        UpdateBannerText.Text = $"正在下載 {info.Version.ToString(3)}…"
+
+        _updateCts = New Threading.CancellationTokenSource()
+        Try
+            Dim progress = New Progress(Of Integer)(Sub(p) UpdateProgress.Value = p)
+            Dim newPath = Await UpdateService.DownloadAsync(info, progress, _updateCts.Token)
+
+            UpdateBannerText.Text = "下載完成，正在重新啟動…"
+            _refreshTimer?.Stop()
+            UpdateService.ApplyAndRestart(newPath)
+        Catch ex As Exception
+            UpdateBannerText.Text = "更新失敗：" & ex.Message
+            UpdateProgress.Visibility = Visibility.Collapsed
+            UpdateNowButton.Visibility = Visibility.Visible
+            UpdateDismissButton.Visibility = Visibility.Visible
+        End Try
     End Sub
 
 #End Region

@@ -24,4 +24,5 @@ dotnet build -c Debug
 
 - 閘道、DNS 留空代表「不設定」；閘道留空時 netsh 使用 `gateway=none`。
 - 快速配置以 JSON 存於 `%AppData%\QuickIPChange\configs.json`。
-- 不要建立 GitHub Release 或推 tag：V1/V2 的自動更新機制會讀取 `releases/latest`。
+- 自動更新（`Services/UpdateService.vb`）：列出 GitHub releases，只挑主版號為 3 且含 `.exe` 資產的版本，下載後以 `.old`/`.new` 換檔並以管理員重啟。
+- 發布 V3 **一定要標記為 pre-release**：V1/V2 的自動更新讀取 `releases/latest`，該端點會略過 pre-release，否則舊版會誤抓到 V3。推送 `3.x.y` tag 會觸發 `.github/workflows/release-v3.yml` 自動建置單一 exe 並建立 pre-release；未經使用者同意不要推 tag。

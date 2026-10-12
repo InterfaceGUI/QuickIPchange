@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -11,6 +11,9 @@
     <FileVersion>3.0.0.0</FileVersion>
     <!-- ToastNotifications 僅提供 .NET Framework 目標，在 .NET 8 上可正常運作 -->
     <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <!-- 發布用設定（單一 exe，指令見 CLAUDE.md 與 .github/workflows/release-v3.yml） -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>

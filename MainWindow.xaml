@@ -125,8 +125,35 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <!-- 更新提示橫幅（有新版本時才顯示） -->
+                <Border Grid.Row="0" x:Name="UpdateBanner" Visibility="Collapsed"
+                        Background="{DynamicResource SelectedBrush}"
+                        BorderBrush="{DynamicResource AccentBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,10,0"
+                                   Foreground="{DynamicResource AccentBrush}"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="UpdateBannerText" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                            <ProgressBar x:Name="UpdateProgress" Height="4" Margin="0,6,0,0"
+                                         Minimum="0" Maximum="100" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <Button Grid.Column="2" x:Name="UpdateNowButton" Content="立即更新"
+                                Padding="14,5" Margin="12,0,6,0" Click="UpdateNow_Click"/>
+                        <Button Grid.Column="3" x:Name="UpdateDismissButton" Content="稍後"
+                                Style="{StaticResource SecondaryButton}" Padding="14,5" Click="UpdateDismiss_Click"/>
+                    </Grid>
+                </Border>
+
                 <!-- 詳細資訊 -->
-                <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,12">
+                <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,12">
                     <Grid>
                         <Grid x:Name="DetailPanel" Visibility="Collapsed">
                             <Grid.ColumnDefinitions>
@@ -206,29 +233,37 @@
                     </Grid>
                 </Border>
 
-                <!-- 快速切換配置 -->
-                <Border Grid.Row="1" x:Name="QuickPanel" Style="{StaticResource Card}" Margin="0,0,0,12">
-                    <StackPanel>
-                        <TextBlock Text="快速切換配置" Style="{StaticResource SectionTitle}"/>
-                        <TextBlock Text="左鍵套用到目前網卡，右鍵編輯或刪除" Style="{StaticResource SectionHint}"/>
+                <!-- 快速切換配置：佔滿剩餘高度，配置過多時在卡片內捲動，不會把手動設定擠出視窗 -->
+                <Border Grid.Row="2" x:Name="QuickPanel" Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                        <TextBlock Grid.Row="0" Text="快速切換配置" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Grid.Row="1" Text="左鍵套用到目前網卡，右鍵編輯或刪除" Style="{StaticResource SectionHint}"/>
+
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled"
-                                      MaxHeight="150">
+                                      MinHeight="56" VerticalAlignment="Top">
                             <WrapPanel x:Name="QuickConfigPanel" Orientation="Horizontal"/>
                         </ScrollViewer>
 
-                        <TextBlock x:Name="NoConfigText"
+                        <TextBlock Grid.Row="3" x:Name="NoConfigText"
                                    Text="尚無配置，按下方按鈕新增"
                                    Style="{StaticResource SectionHint}"
                                    Margin="0,0,0,4" Visibility="Collapsed"/>
 
-                        <Button Content="+ 新增配置"
+                        <Button Grid.Row="4" Content="+ 新增配置"
                                 Style="{StaticResource SecondaryButton}"
                                 Margin="0,8,0,0"
                                 Click="AddConfig_Click"
                                 HorizontalAlignment="Left"/>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- 手動設定 -->
