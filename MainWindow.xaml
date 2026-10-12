@@ -244,8 +244,17 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="快速切換配置" Style="{StaticResource SectionTitle}"/>
-                        <TextBlock Grid.Row="1" Text="左鍵套用到目前網卡，右鍵編輯或刪除" Style="{StaticResource SectionHint}"/>
+                        <Grid Grid.Row="0" Grid.RowSpan="2">
+                            <StackPanel>
+                                <TextBlock Text="快速切換配置" Style="{StaticResource SectionTitle}"/>
+                                <TextBlock Text="左鍵套用到目前網卡，右鍵編輯或刪除" Style="{StaticResource SectionHint}"/>
+                            </StackPanel>
+                            <Button Content="+ 新增配置"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Padding="12,5"
+                                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Click="AddConfig_Click"/>
+                        </Grid>
 
                         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled"
@@ -254,15 +263,10 @@
                         </ScrollViewer>
 
                         <TextBlock Grid.Row="3" x:Name="NoConfigText"
-                                   Text="尚無配置，按下方按鈕新增"
+                                   Text="尚無配置，按右上角「+ 新增配置」建立"
                                    Style="{StaticResource SectionHint}"
-                                   Margin="0,0,0,4" Visibility="Collapsed"/>
+                                   Margin="0,0,0,0" Visibility="Collapsed"/>
 
-                        <Button Grid.Row="4" Content="+ 新增配置"
-                                Style="{StaticResource SecondaryButton}"
-                                Margin="0,8,0,0"
-                                Click="AddConfig_Click"
-                                HorizontalAlignment="Left"/>
                     </Grid>
                 </Border>
 
