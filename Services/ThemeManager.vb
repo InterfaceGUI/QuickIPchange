@@ -20,6 +20,7 @@ Public Module ThemeManager
 
     Private ReadOnly JsonOptions As New JsonSerializerOptions With {.WriteIndented = True}
     Private _initialized As Boolean
+    Private _appliedDark As Boolean?   ' 目前已載入的顏色字典是深色還是淺色
 
     Public Property Current As AppTheme = AppTheme.System
 
@@ -39,12 +40,17 @@ Public Module ThemeManager
         Current = LoadSetting()
         ApplyBrushes()
 
-        ' 使用「跟隨系統」時，Windows 切換外觀要跟著換
+        ' 使用「跟隨系統」時，Windows 切換外觀要跟著換。
+        ' 注意：netsh 等網路操作也會廣播 WM_SETTINGCHANGE（Category = General），
+        ' 所以只有實際深淺色真的改變時才重新載入字典，否則畫面會閃一下。
         AddHandler SystemEvents.UserPreferenceChanged,
             Sub(s, e)
-                If Current = AppTheme.System AndAlso e.Category = UserPreferenceCategory.General Then
-                    Application.Current?.Dispatcher.BeginInvoke(Sub() ApplyBrushes())
-                End If
+                If Current <> AppTheme.System OrElse e.Category <> UserPreferenceCategory.General Then Return
+                Application.Current?.Dispatcher.BeginInvoke(
+                    Sub()
+                        If _appliedDark.HasValue AndAlso _appliedDark.Value = IsDarkActive Then Return
+                        ApplyBrushes()
+                    End Sub)
             End Sub
     End Sub
 
@@ -60,9 +66,15 @@ Public Module ThemeManager
     End Sub
 
     Private Sub ApplyBrushes()
+        Dim dark = IsDarkActive
+        If _appliedDark.HasValue AndAlso _appliedDark.Value = dark Then
+            RaiseEvent ThemeChanged()
+            Return
+        End If
+
         Dim dicts = Application.Current.Resources.MergedDictionaries
         Dim target As New ResourceDictionary With {
-            .Source = New Uri($"Styles/Colors.{If(IsDarkActive, "Dark", "Light")}.xaml", UriKind.Relative)
+            .Source = New Uri($"Styles/Colors.{If(dark, "Dark", "Light")}.xaml", UriKind.Relative)
         }
 
         Dim existingIndex = -1
@@ -79,6 +91,7 @@ Public Module ThemeManager
         Else
             dicts.Insert(0, target)
         End If
+        _appliedDark = dark
 
         RaiseEvent ThemeChanged()
     End Sub
