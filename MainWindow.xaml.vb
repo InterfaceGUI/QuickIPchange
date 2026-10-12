@@ -23,6 +23,7 @@ Class MainWindow
 #Region "生命週期"
 
     Private Async Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
+        Title = $"QuickIPChange v{UpdateService.CurrentVersion.ToString(3)} - 快速 IP 切換工具"
         InitializeNotifier()
 
         AddHandler ThemeManager.ThemeChanged, AddressOf UpdateThemeIcon
