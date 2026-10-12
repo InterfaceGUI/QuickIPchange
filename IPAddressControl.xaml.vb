@@ -1,173 +1,150 @@
-Imports System.Text.RegularExpressions
 Imports System.Windows.Input
 
+''' <summary>
+''' 四段式 IPv4 輸入控制項。全部留空時 IPAddress 回傳空字串；部分留空的段落視為 0。
+''' </summary>
 Public Class IPAddressControl
+
+    Private ReadOnly _parts As TextBox()
 
     Public Sub New()
         InitializeComponent()
-        AddEventHandlers()
+        _parts = {Part1, Part2, Part3, Part4}
+
+        For Each part In _parts
+            AddHandler part.PreviewTextInput, AddressOf Octet_PreviewTextInput
+            AddHandler part.PreviewKeyDown, AddressOf Octet_PreviewKeyDown
+            AddHandler part.TextChanged, AddressOf Octet_TextChanged
+            AddHandler part.GotKeyboardFocus, Sub(s, e) CType(s, TextBox).SelectAll()
+            DataObject.AddPastingHandler(part, AddressOf Octet_Paste)
+        Next
     End Sub
 
-    ' 添加事件處理器
-    Private Sub AddEventHandlers()
-        AddHandler Part1.PreviewTextInput, AddressOf ValidateNumberInput
-        AddHandler Part2.PreviewTextInput, AddressOf ValidateNumberInput
-        AddHandler Part3.PreviewTextInput, AddressOf ValidateNumberInput
-        AddHandler Part4.PreviewTextInput, AddressOf ValidateNumberInput
-
-        AddHandler Part1.TextChanged, AddressOf OnPartTextChanged
-        AddHandler Part2.TextChanged, AddressOf OnPartTextChanged
-        AddHandler Part3.TextChanged, AddressOf OnPartTextChanged
-        AddHandler Part4.TextChanged, AddressOf OnPartTextChanged
-
-        AddHandler Part1.PreviewKeyDown, AddressOf OnPartKeyDown
-        AddHandler Part2.PreviewKeyDown, AddressOf OnPartKeyDown
-        AddHandler Part3.PreviewKeyDown, AddressOf OnPartKeyDown
-        AddHandler Part4.PreviewKeyDown, AddressOf OnPartKeyDown
-    End Sub
-
-    ' IP 地址屬性
+    ''' <summary>目前輸入的 IP；四段皆為空時回傳空字串</summary>
     Public Property IPAddress As String
         Get
-            Return $"{GetPartText(Part1)}.{GetPartText(Part2)}.{GetPartText(Part3)}.{GetPartText(Part4)}"
+            If _parts.All(Function(p) String.IsNullOrEmpty(p.Text)) Then Return ""
+            Return String.Join(".", _parts.Select(Function(p) If(String.IsNullOrEmpty(p.Text), "0", p.Text)))
         End Get
         Set(value As String)
-            If String.IsNullOrEmpty(value) Then
-                Part1.Text = ""
-                Part2.Text = ""
-                Part3.Text = ""
-                Part4.Text = ""
+            If String.IsNullOrWhiteSpace(value) Then
+                Clear()
                 Return
             End If
 
-            Dim parts = value.Split("."c)
-            If parts.Length >= 1 Then Part1.Text = parts(0)
-            If parts.Length >= 2 Then Part2.Text = parts(1)
-            If parts.Length >= 3 Then Part3.Text = parts(2)
-            If parts.Length >= 4 Then Part4.Text = parts(3)
+            Dim segments = value.Trim().Split("."c)
+            For i = 0 To _parts.Length - 1
+                _parts(i).Text = If(i < segments.Length, segments(i), "")
+            Next
         End Set
     End Property
 
-    Private Function GetPartText(textBox As TextBox) As String
-        Return If(String.IsNullOrEmpty(textBox.Text), "0", textBox.Text)
+    ''' <summary>是否四段皆未輸入</summary>
+    Public ReadOnly Property IsEmpty As Boolean
+        Get
+            Return _parts.All(Function(p) String.IsNullOrEmpty(p.Text))
+        End Get
+    End Property
+
+    Public Sub Clear()
+        For Each part In _parts
+            part.Text = ""
+        Next
+    End Sub
+
+    Public Shadows Function Focus() As Boolean
+        Return Part1.Focus()
     End Function
 
-    ' 驗證數字輸入
-    Private Sub ValidateNumberInput(sender As Object, e As TextCompositionEventArgs)
-        ' 只允許數字
-        Dim regex As New Regex("[^0-9]+")
-        If regex.IsMatch(e.Text) Then
+    ' 只允許數字，且輸入後不得超過 255
+    Private Sub Octet_PreviewTextInput(sender As Object, e As TextCompositionEventArgs)
+        Dim textBox = CType(sender, TextBox)
+
+        If Not e.Text.All(AddressOf Char.IsDigit) Then
             e.Handled = True
             Return
         End If
 
-        Dim textBox = TryCast(sender, TextBox)
-        If textBox IsNot Nothing Then
-            ' 如果已經有 3 位數字，阻止輸入並跳到下一格
-            If textBox.Text.Length >= 3 Then
-                e.Handled = True
-                MoveToNextBox(textBox)
-                Return
-            End If
+        Dim selectionEnd = textBox.SelectionStart + textBox.SelectionLength
+        Dim newText = textBox.Text.Substring(0, textBox.SelectionStart) & e.Text & textBox.Text.Substring(selectionEnd)
+        Dim value As Integer
+        If Integer.TryParse(newText, value) AndAlso value > 255 Then
+            e.Handled = True
+            Return
+        End If
 
-            ' 檢查輸入後的值是否超過 255
-            Dim newText = textBox.Text.Insert(textBox.SelectionStart, e.Text)
-            Dim value As Integer
-            If Integer.TryParse(newText, value) Then
-                If value > 255 Then
+        ' 填滿三位數後自動跳到下一格
+        If newText.Length >= 3 AndAlso textBox.SelectionStart + e.Text.Length >= 3 Then
+            textBox.Text = newText
+            e.Handled = True
+            MoveToNext(textBox)
+        End If
+    End Sub
+
+    ' 貼上完整 IP（例如 192.168.1.10）時自動分配到四格
+    Private Sub Octet_Paste(sender As Object, e As DataObjectPastingEventArgs)
+        If Not e.DataObject.GetDataPresent(DataFormats.Text) Then Return
+        Dim text = CStr(e.DataObject.GetData(DataFormats.Text)).Trim()
+        If text.Contains("."c) Then
+            e.CancelCommand()
+            IPAddress = text
+            Part4.Focus()
+            Part4.CaretIndex = Part4.Text.Length
+        End If
+    End Sub
+
+    Private Sub Octet_TextChanged(sender As Object, e As TextChangedEventArgs)
+        Dim textBox = CType(sender, TextBox)
+        Dim value As Integer
+        ' 透過程式設定或輸入法繞過 PreviewTextInput 時的保險
+        If Integer.TryParse(textBox.Text, value) AndAlso value > 255 Then
+            textBox.Text = "255"
+            textBox.CaretIndex = textBox.Text.Length
+        End If
+    End Sub
+
+    Private Sub Octet_PreviewKeyDown(sender As Object, e As KeyEventArgs)
+        Dim textBox = CType(sender, TextBox)
+
+        Select Case e.Key
+            Case Key.OemPeriod, Key.Decimal, Key.Space
+                If textBox.Text.Length > 0 Then MoveToNext(textBox)
+                e.Handled = True
+
+            Case Key.Right
+                If textBox.CaretIndex = textBox.Text.Length AndAlso textBox.SelectionLength = 0 Then
+                    MoveToNext(textBox)
                     e.Handled = True
                 End If
-            End If
-        End If
-    End Sub
 
-    ' 文本變更事件
-    Private Sub OnPartTextChanged(sender As Object, e As TextChangedEventArgs)
-        Dim textBox = TryCast(sender, TextBox)
-        If textBox Is Nothing Then Return
-
-        ' 驗證並限制範圍 0-255
-        If Not String.IsNullOrEmpty(textBox.Text) Then
-            Dim value As Integer
-            If Integer.TryParse(textBox.Text, value) Then
-                If value > 255 Then
-                    textBox.Text = "255"
-                    textBox.SelectionStart = textBox.Text.Length
-                    Return
+            Case Key.Left
+                If textBox.CaretIndex = 0 AndAlso textBox.SelectionLength = 0 Then
+                    MoveToPrevious(textBox)
+                    e.Handled = True
                 End If
-            End If
-        End If
 
-        ' 不再自動跳格，由 PreviewTextInput 處理
+            Case Key.Back
+                If textBox.Text.Length = 0 Then
+                    MoveToPrevious(textBox)
+                    e.Handled = True
+                End If
+        End Select
     End Sub
 
-    ' 鍵盤事件處理
-    Private Sub OnPartKeyDown(sender As Object, e As KeyEventArgs)
-        Dim textBox = TryCast(sender, TextBox)
-        If textBox Is Nothing Then Return
-
-        ' 按下點號，跳到下一格
-        If e.Key = Key.OemPeriod OrElse e.Key = Key.Decimal Then
-            MoveToNextBox(textBox)
-            e.Handled = True
-            Return
-        End If
-
-        ' 按下向右鍵在末尾時，跳到下一格
-        If e.Key = Key.Right AndAlso textBox.SelectionStart = textBox.Text.Length Then
-            MoveToNextBox(textBox)
-            e.Handled = True
-            Return
-        End If
-
-        ' 按下向左鍵在開頭時，跳到上一格
-        If e.Key = Key.Left AndAlso textBox.SelectionStart = 0 Then
-            MoveToPreviousBox(textBox)
-            e.Handled = True
-            Return
-        End If
-
-        ' Backspace 在開頭時跳到上一格
-        If e.Key = Key.Back AndAlso textBox.SelectionStart = 0 AndAlso textBox.SelectionLength = 0 Then
-            MoveToPreviousBox(textBox)
-            e.Handled = True
-            Return
+    Private Sub MoveToNext(current As TextBox)
+        Dim index = Array.IndexOf(_parts, current)
+        If index >= 0 AndAlso index < _parts.Length - 1 Then
+            _parts(index + 1).Focus()
+            _parts(index + 1).SelectAll()
         End If
     End Sub
 
-    ' 移動到下一個輸入框
-    Private Sub MoveToNextBox(currentBox As TextBox)
-        Dim nextBox As TextBox = Nothing
-
-        If currentBox Is Part1 Then
-            nextBox = Part2
-        ElseIf currentBox Is Part2 Then
-            nextBox = Part3
-        ElseIf currentBox Is Part3 Then
-            nextBox = Part4
-        End If
-
-        If nextBox IsNot Nothing Then
-            nextBox.Focus()
-            nextBox.SelectAll()
-        End If
-    End Sub
-
-    ' 移動到上一個輸入框
-    Private Sub MoveToPreviousBox(currentBox As TextBox)
-        Dim previousBox As TextBox = Nothing
-
-        If currentBox Is Part2 Then
-            previousBox = Part1
-        ElseIf currentBox Is Part3 Then
-            previousBox = Part2
-        ElseIf currentBox Is Part4 Then
-            previousBox = Part3
-        End If
-
-        If previousBox IsNot Nothing Then
-            previousBox.Focus()
-            previousBox.SelectionStart = previousBox.Text.Length
+    Private Sub MoveToPrevious(current As TextBox)
+        Dim index = Array.IndexOf(_parts, current)
+        If index > 0 Then
+            Dim prev = _parts(index - 1)
+            prev.Focus()
+            prev.CaretIndex = prev.Text.Length
         End If
     End Sub
 

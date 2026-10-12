@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="1.0.0.0" name="QuickIPChange.app"/>
-  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2"> 
+  <assemblyIdentity version="3.0.0.0" name="QuickIPChange.app"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
     <security>
       <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
-        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+        <!-- netsh 需要系統管理員權限，由 OS 在啟動時直接要求 UAC 提升 -->
+        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
       </requestedPrivileges>
     </security>
   </trustInfo>
-  <!-- 要求管理員權限 -->
-  
-	
-	
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
       <!-- Windows 10 / 11 -->

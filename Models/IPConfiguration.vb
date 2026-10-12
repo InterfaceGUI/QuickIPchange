@@ -1,47 +1,42 @@
+''' <summary>
+''' 一組可儲存的靜態 IP 設定（以 JSON 存於 %AppData%\QuickIPChange\configs.json）。
+''' 閘道與 DNS 可留空；留空表示不設定。
+''' </summary>
 Public Class IPConfiguration
-    Public Property ConfigName As String
-    Public Property IPAddress As String
-    Public Property SubnetMask As String
-    Public Property Gateway As String
-    Public Property DNS1 As String
-    Public Property DNS2 As String
+    Public Property ConfigName As String = ""
+    Public Property IPAddress As String = ""
+    Public Property SubnetMask As String = ""
+    Public Property Gateway As String = ""
+    Public Property DNS1 As String = ""
+    Public Property DNS2 As String = ""
 
-    Public Sub New()
-        ConfigName = ""
-        IPAddress = ""
-        SubnetMask = ""
-        Gateway = ""
-        DNS1 = ""
-        DNS2 = ""
+    ''' <summary>去除空白並把 0.0.0.0 正規化為空字串</summary>
+    Public Sub Normalize()
+        ConfigName = If(ConfigName, "").Trim()
+        IPAddress = Clean(IPAddress)
+        SubnetMask = Clean(SubnetMask)
+        Gateway = Clean(Gateway)
+        DNS1 = Clean(DNS1)
+        DNS2 = Clean(DNS2)
     End Sub
 
-    Public Sub New(name As String, ip As String, mask As String, gw As String, Optional dns1 As String = "", Optional dns2 As String = "")
-        ConfigName = name
-        IPAddress = ip
-        SubnetMask = mask
-        Gateway = gw
-        Me.DNS1 = dns1
-        Me.DNS2 = dns2
-    End Sub
-
-    ' 序列化為字串以儲存在 My.Settings
-    Public Function ToSettingString() As String
-        Return $"{ConfigName}|{IPAddress}|{SubnetMask}|{Gateway}|{DNS1}|{DNS2}"
+    Public Function Clone() As IPConfiguration
+        Dim copy As New IPConfiguration
+        copy.CopyFrom(Me)
+        Return copy
     End Function
 
-    ' 從字串反序列化
-    Public Shared Function FromSettingString(settingString As String) As IPConfiguration
-        Dim parts = settingString.Split("|"c)
-        If parts.Length >= 4 Then
-            Return New IPConfiguration With {
-                .ConfigName = parts(0),
-                .IPAddress = parts(1),
-                .SubnetMask = parts(2),
-                .Gateway = parts(3),
-                .DNS1 = If(parts.Length > 4, parts(4), ""),
-                .DNS2 = If(parts.Length > 5, parts(5), "")
-            }
-        End If
-        Return Nothing
+    Public Sub CopyFrom(other As IPConfiguration)
+        ConfigName = other.ConfigName
+        IPAddress = other.IPAddress
+        SubnetMask = other.SubnetMask
+        Gateway = other.Gateway
+        DNS1 = other.DNS1
+        DNS2 = other.DNS2
+    End Sub
+
+    Private Shared Function Clean(value As String) As String
+        Dim v = If(value, "").Trim()
+        Return If(v = "0.0.0.0", "", v)
     End Function
 End Class

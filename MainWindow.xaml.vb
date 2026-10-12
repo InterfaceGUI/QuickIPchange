@@ -1,448 +1,363 @@
-﻿Imports System.Collections.ObjectModel
-Imports System.Collections.Specialized
+Imports System.Collections.ObjectModel
 Imports System.IO
 Imports System.Text.Json
 Imports ToastNotifications
-Imports ToastNotifications.Lifetime
-Imports ToastNotifications.Position
-Imports ToastNotifications.Messages
 Imports ToastNotifications.Core
+Imports ToastNotifications.Lifetime
+Imports ToastNotifications.Messages
+Imports ToastNotifications.Position
 
 Class MainWindow
-    Private _adapters As ObservableCollection(Of NetworkAdapterInfo)
-    Private _currentAdapter As NetworkAdapterInfo
+    Private Shared ReadOnly RefreshInterval As TimeSpan = TimeSpan.FromSeconds(3)
+    Private Shared ReadOnly SettleDelay As TimeSpan = TimeSpan.FromSeconds(1)
+
+    Private ReadOnly _adapters As New ObservableCollection(Of NetworkAdapterInfo)
     Private _configStorage As New List(Of IPConfiguration)
+    Private _currentAdapter As NetworkAdapterInfo
     Private _refreshTimer As Threading.DispatcherTimer
-    Private _isRefreshing As Boolean = False
+    Private _isRefreshing As Boolean
+    Private _isBusy As Boolean
     Private _notifier As Notifier
-    Private _notifier_options As MessageOptions
+    Private _notifierOptions As MessageOptions
 
-    Private Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
+#Region "生命週期"
 
-        ' 初始化 Toast 通知
+    Private Async Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
+        InitializeNotifier()
+
+        AdapterListBox.ItemsSource = _adapters
+        LoadConfigsFromFile()
+        RenderQuickConfigs()
+
+        Await RefreshAdaptersAsync()
+
+        _refreshTimer = New Threading.DispatcherTimer With {.Interval = RefreshInterval}
+        AddHandler _refreshTimer.Tick, AddressOf RefreshTimer_Tick
+        _refreshTimer.Start()
+    End Sub
+
+    Private Sub MainWindow_Closing(sender As Object, e As ComponentModel.CancelEventArgs) Handles Me.Closing
+        _refreshTimer?.Stop()
+        _refreshTimer = Nothing
+        _notifier?.Dispose()
+        _notifier = Nothing
+    End Sub
+
+    Private Sub InitializeNotifier()
         _notifier = New Notifier(Sub(cfg)
                                      cfg.PositionProvider = New WindowPositionProvider(
                                          parentWindow:=Me,
                                          corner:=Corner.TopRight,
                                          offsetX:=10,
                                          offsetY:=10)
-
                                      cfg.LifetimeSupervisor = New TimeAndCountBasedLifetimeSupervisor(
                                          notificationLifetime:=TimeSpan.FromSeconds(3),
                                          maximumNotificationCount:=MaximumNotificationCount.FromCount(5))
-
                                      cfg.Dispatcher = Application.Current.Dispatcher
                                  End Sub)
-        _notifier_options = New MessageOptions()
-
-        With _notifier_options
-
-            .ShowCloseButton = False
+        _notifierOptions = New MessageOptions With {
+            .ShowCloseButton = False,
             .FreezeOnMouseEnter = False
-        End With
-
-        LoadAdapters()
-        LoadConfigFromSettings()
-        StartAutoRefresh()
-    End Sub
-
-    Private Sub MainWindow_Closing(sender As Object, e As ComponentModel.CancelEventArgs) Handles Me.Closing
-        ' 停止自動刷新計時器
-        If _refreshTimer IsNot Nothing Then
-            _refreshTimer.Stop()
-            _refreshTimer = Nothing
-        End If
-
-        ' 清理 Toast 通知
-        If _notifier IsNot Nothing Then
-            _notifier.Dispose()
-            _notifier = Nothing
-        End If
-    End Sub
-
-    ' 啟動自動刷新
-    Private Sub StartAutoRefresh()
-        _refreshTimer = New Threading.DispatcherTimer With {
-            .Interval = TimeSpan.FromSeconds(3)
         }
-        AddHandler _refreshTimer.Tick, AddressOf RefreshTimer_Tick
-        _refreshTimer.Start()
     End Sub
 
-    ' 定時刷新事件
-    Private Sub RefreshTimer_Tick(sender As Object, e As EventArgs)
+#End Region
+
+#Region "網卡列表與刷新"
+
+    Private Async Sub RefreshTimer_Tick(sender As Object, e As EventArgs)
+        If _isBusy Then Return
+        Await RefreshAdaptersAsync()
+    End Sub
+
+    ''' <summary>在背景執行緒查詢網卡，再回到 UI 執行緒合併進列表</summary>
+    Private Async Function RefreshAdaptersAsync() As Task
         If _isRefreshing Then Return
-
-        ' 如果用戶正在輸入手動 IP 設定，不刷新
-        If IsManualInputFocused() Then Return
-
         _isRefreshing = True
-
         Try
-            RefreshAdapters()
+            Dim fresh = Await Task.Run(Function() NetworkService.GetPhysicalAdapters())
+            MergeAdapters(fresh)
+        Catch ex As Exception
+            Debug.WriteLine($"刷新網卡資訊失敗: {ex.Message}")
         Finally
             _isRefreshing = False
         End Try
-    End Sub
-
-    ' 檢查手動輸入區域是否有焦點
-    Private Function IsManualInputFocused() As Boolean
-        Return ManualIP.IsKeyboardFocusWithin OrElse
-               ManualMask.IsKeyboardFocusWithin OrElse
-               ManualGateway.IsKeyboardFocusWithin
     End Function
 
-    ' 刷新網卡列表和資訊
-    Private Sub RefreshAdapters()
-        Try
-            Dim currentAdapters = NetworkService.GetPhysicalAdapters()
-            Dim selectedAdapterName = _currentAdapter?.Name
+    ''' <summary>增量更新列表：移除消失的、更新既有的、加入新的，避免整個列表重建造成閃爍與選取遺失</summary>
+    Private Sub MergeAdapters(fresh As List(Of NetworkAdapterInfo))
+        Dim previousId = _currentAdapter?.Id
 
-            ' 檢查網卡數量是否變化
-            Dim adapterCountChanged = currentAdapters.Count <> _adapters.Count
+        For i = _adapters.Count - 1 To 0 Step -1
+            Dim id = _adapters(i).Id
+            If Not fresh.Any(Function(a) a.Id = id) Then _adapters.RemoveAt(i)
+        Next
 
-            ' 檢查網卡名稱列表是否變化
-            Dim adapterNamesChanged = False
-            If Not adapterCountChanged Then
-                Dim currentNames = currentAdapters.Select(Function(a) a.Name).OrderBy(Function(n) n).ToList()
-                Dim existingNames = _adapters.Select(Function(a) a.Name).OrderBy(Function(n) n).ToList()
-                adapterNamesChanged = Not currentNames.SequenceEqual(existingNames)
-            End If
-
-            ' 如果網卡列表變化，重新載入
-            If adapterCountChanged OrElse adapterNamesChanged Then
-                _adapters.Clear()
-                For Each adapter In currentAdapters
-                    _adapters.Add(adapter)
-                Next
-
-                ' 嘗試重新選擇之前的網卡
-                If Not String.IsNullOrEmpty(selectedAdapterName) Then
-                    Dim adapter = _adapters.FirstOrDefault(Function(a) a.Name = selectedAdapterName)
-                    If adapter IsNot Nothing Then
-                        AdapterListBox.SelectedItem = adapter
-                    ElseIf _adapters.Count > 0 Then
-                        AdapterListBox.SelectedIndex = 0
-                    End If
-                ElseIf _adapters.Count > 0 AndAlso AdapterListBox.SelectedItem Is Nothing Then
-                    AdapterListBox.SelectedIndex = 0
-                End If
+        For Each item In fresh
+            Dim id = item.Id
+            Dim existing = _adapters.FirstOrDefault(Function(a) a.Id = id)
+            If existing Is Nothing Then
+                _adapters.Add(item)
             Else
-                ' 網卡列表未變化，檢查並更新現有網卡的 IP 資訊
-                Dim hasChanges = False
-
-                For i = 0 To _adapters.Count - 1
-                    Dim existingAdapter = _adapters(i)
-                    Dim newAdapter = currentAdapters.FirstOrDefault(Function(a) a.Name = existingAdapter.Name)
-
-                    If newAdapter IsNot Nothing Then
-                        ' 檢查並更新 IP 相關資訊
-                        If existingAdapter.IPAddress <> newAdapter.IPAddress Then
-                            existingAdapter.IPAddress = newAdapter.IPAddress
-                            hasChanges = True
-                        End If
-                        If existingAdapter.SubnetMask <> newAdapter.SubnetMask Then
-                            existingAdapter.SubnetMask = newAdapter.SubnetMask
-                            hasChanges = True
-                        End If
-                        If existingAdapter.Gateway <> newAdapter.Gateway Then
-                            existingAdapter.Gateway = newAdapter.Gateway
-                            hasChanges = True
-                        End If
-                        If existingAdapter.IsDHCPEnabled <> newAdapter.IsDHCPEnabled Then
-                            existingAdapter.IsDHCPEnabled = newAdapter.IsDHCPEnabled
-                            hasChanges = True
-                        End If
-                    End If
-                Next
-
-                ' 只有當資料有變化時才更新詳細資訊面板
-                If hasChanges AndAlso _currentAdapter IsNot Nothing Then
-                    UpdateDetailPanel()
-                End If
+                existing.UpdateFrom(item)
             End If
+        Next
 
-        Catch ex As Exception
-            ' 刷新失敗時不顯示錯誤，避免干擾用戶
-            Debug.WriteLine($"刷新網卡資訊失敗: {ex.Message}")
-        End Try
+        NoAdapterText.Visibility = If(_adapters.Count = 0, Visibility.Visible, Visibility.Collapsed)
+
+        If AdapterListBox.SelectedItem Is Nothing AndAlso _adapters.Count > 0 Then
+            Dim previous = _adapters.FirstOrDefault(Function(a) a.Id = previousId)
+            AdapterListBox.SelectedItem = If(previous, _adapters(0))
+        End If
+
+        UpdateDetailPanel()
     End Sub
 
-    ' 載入網卡列表
-    Private Sub LoadAdapters()
-        Try
-            _adapters = New ObservableCollection(Of NetworkAdapterInfo)(NetworkService.GetPhysicalAdapters())
-            AdapterListBox.ItemsSource = _adapters
-
-            If _adapters.Count > 0 Then
-                AdapterListBox.SelectedIndex = 0
-            End If
-        Catch ex As Exception
-            _notifier?.ShowError("載入網卡列表失敗: " & ex.Message, _notifier_options)
-        End Try
-    End Sub
-
-    ' 網卡選擇變更事件
     Private Sub AdapterListBox_SelectionChanged(sender As Object, e As SelectionChangedEventArgs)
-        If AdapterListBox.SelectedItem IsNot Nothing Then
-            _currentAdapter = CType(AdapterListBox.SelectedItem, NetworkAdapterInfo)
-            UpdateDetailPanel()
-            LoadQuickConfigs()
-        Else
-            _currentAdapter = Nothing
+        _currentAdapter = TryCast(AdapterListBox.SelectedItem, NetworkAdapterInfo)
+        UpdateDetailPanel()
+        FillManualInputs()
+    End Sub
+
+    ''' <summary>更新右上角的唯讀資訊（每次刷新都會呼叫）</summary>
+    Private Sub UpdateDetailPanel()
+        Dim adapter = _currentAdapter
+        If adapter Is Nothing Then
             DetailPanel.Visibility = Visibility.Collapsed
             NoSelectionText.Visibility = Visibility.Visible
+            Return
         End If
+
+        DetailPanel.Visibility = Visibility.Visible
+        NoSelectionText.Visibility = Visibility.Collapsed
+
+        DetailName.Text = adapter.Name
+        DetailDescription.Text = adapter.Description
+        DetailIP.Text = OrDash(adapter.IPAddress)
+        DetailMask.Text = OrDash(adapter.SubnetMask)
+        DetailGateway.Text = OrDash(adapter.Gateway)
+        DetailDns.Text = OrDash(adapter.DnsServers)
+        DetailMAC.Text = OrDash(adapter.MacAddress)
+        DetailMode.Text = If(adapter.IsDHCPEnabled, "DHCP 自動取得", "手動設定（靜態）") &
+                          If(adapter.IsConnected, "", "，目前未連線")
     End Sub
 
-    ' 更新詳細資訊面板
-    Private Sub UpdateDetailPanel()
-        If _currentAdapter IsNot Nothing Then
-            DetailPanel.Visibility = Visibility.Visible
-            NoSelectionText.Visibility = Visibility.Collapsed
-
-            ' 顯示網卡名稱，如果是 DHCP 模式則加上標記
-            If _currentAdapter.IsDHCPEnabled Then
-                DetailName.Text = _currentAdapter.Name & " (DHCP)"
-            Else
-                DetailName.Text = _currentAdapter.Name
-            End If
-
-            DetailIP.Text = If(String.IsNullOrEmpty(_currentAdapter.IPAddress), "無", _currentAdapter.IPAddress)
-            DetailMask.Text = If(String.IsNullOrEmpty(_currentAdapter.SubnetMask), "無", _currentAdapter.SubnetMask)
-            DetailGateway.Text = If(String.IsNullOrEmpty(_currentAdapter.Gateway), "無", _currentAdapter.Gateway)
-            DetailMAC.Text = If(String.IsNullOrEmpty(_currentAdapter.MacAddress), "無", _currentAdapter.MacAddress)
-
-            ' 填入手動設定區域
-            ManualIP.IPAddress = If(String.IsNullOrEmpty(_currentAdapter.IPAddress), "", _currentAdapter.IPAddress)
-            ManualMask.IPAddress = If(String.IsNullOrEmpty(_currentAdapter.SubnetMask), "", _currentAdapter.SubnetMask)
-            ManualGateway.IPAddress = If(String.IsNullOrEmpty(_currentAdapter.Gateway), "", _currentAdapter.Gateway)
+    ''' <summary>把目前網卡的設定帶入手動輸入區。只在切換網卡或套用成功後呼叫，避免覆蓋使用者正在輸入的內容</summary>
+    Private Sub FillManualInputs()
+        Dim adapter = _currentAdapter
+        If adapter Is Nothing Then
+            ManualIP.Clear()
+            ManualMask.Clear()
+            ManualGateway.Clear()
+            ManualDns1.Clear()
+            ManualDns2.Clear()
+            Return
         End If
+
+        ManualIP.IPAddress = adapter.IPAddress
+        ManualMask.IPAddress = adapter.SubnetMask
+        ManualGateway.IPAddress = adapter.Gateway
+
+        Dim dns = adapter.DnsServers.Split(","c, StringSplitOptions.RemoveEmptyEntries Or StringSplitOptions.TrimEntries)
+        ManualDns1.IPAddress = If(dns.Length > 0, dns(0), "")
+        ManualDns2.IPAddress = If(dns.Length > 1, dns(1), "")
     End Sub
 
-    ' 載入快速切換配置
-    Private Sub LoadQuickConfigs()
+    Private Shared Function OrDash(value As String) As String
+        Return If(String.IsNullOrEmpty(value), "—", value)
+    End Function
+
+#End Region
+
+#Region "套用設定"
+
+    Private Async Sub ApplyManual_Click(sender As Object, e As RoutedEventArgs)
+        If Not EnsureAdapterSelected() Then Return
+
+        Dim config As New IPConfiguration With {
+            .IPAddress = ManualIP.IPAddress,
+            .SubnetMask = ManualMask.IPAddress,
+            .Gateway = ManualGateway.IPAddress,
+            .DNS1 = ManualDns1.IPAddress,
+            .DNS2 = ManualDns2.IPAddress
+        }
+        config.Normalize()
+
+        Dim validationError = IPValidator.Validate(config)
+        If validationError IsNot Nothing Then
+            _notifier?.ShowWarning(validationError, _notifierOptions)
+            Return
+        End If
+
+        Await ApplyConfigAsync(config, "已成功套用 IP 設定")
+    End Sub
+
+    Private Async Sub SetDHCP_Click(sender As Object, e As RoutedEventArgs)
+        If Not EnsureAdapterSelected() Then Return
+        Dim adapter = _currentAdapter
+
+        Await RunNetworkOperationAsync(
+            Function() NetworkService.SetDHCPAsync(adapter.Name, adapter.IsDHCPEnabled),
+            "已切換到 DHCP 模式")
+    End Sub
+
+    Private Async Function ApplyConfigAsync(config As IPConfiguration, successMessage As String) As Task
+        Dim adapter = _currentAdapter
+        Await RunNetworkOperationAsync(
+            Function() NetworkService.ApplyIPConfigurationAsync(adapter.Name, config),
+            successMessage)
+    End Function
+
+    ''' <summary>統一處理：鎖定 UI、執行 netsh、等待設定生效、重新整理、回填輸入區</summary>
+    Private Async Function RunNetworkOperationAsync(operation As Func(Of Task), successMessage As String) As Task
+        If _isBusy Then Return
+        Dim adapter = _currentAdapter
+        SetBusy(True)
+        Try
+            Await operation()
+            _notifier?.ShowSuccess(successMessage, _notifierOptions)
+
+            Await Task.Delay(SettleDelay)
+            Await RefreshAdaptersAsync()
+            If _currentAdapter Is adapter Then FillManualInputs()
+        Catch ex As Exception
+            _notifier?.ShowError(ex.Message, _notifierOptions)
+        Finally
+            SetBusy(False)
+        End Try
+    End Function
+
+    Private Function EnsureAdapterSelected() As Boolean
+        If _currentAdapter IsNot Nothing Then Return True
+        _notifier?.ShowWarning("請先選擇一個網路介面卡", _notifierOptions)
+        Return False
+    End Function
+
+    Private Sub SetBusy(busy As Boolean)
+        _isBusy = busy
+        QuickPanel.IsEnabled = Not busy
+        ManualPanel.IsEnabled = Not busy
+        AdapterListBox.IsEnabled = Not busy
+        Cursor = If(busy, Cursors.Wait, Nothing)
+    End Sub
+
+#End Region
+
+#Region "快速切換配置"
+
+    Private Sub RenderQuickConfigs()
         QuickConfigPanel.Children.Clear()
-
-        ' 載入全局配置（所有網卡共用）
         For Each config In _configStorage
-            AddQuickConfigButton(config)
+            QuickConfigPanel.Children.Add(CreateQuickConfigButton(config))
         Next
     End Sub
 
-    ' 新增快速配置按鈕
-    Private Sub AddQuickConfigButton(config As IPConfiguration)
+    Private Function CreateQuickConfigButton(config As IPConfiguration) As Button
+        Dim summary = config.IPAddress
+        If Not String.IsNullOrEmpty(config.Gateway) Then summary &= $" → {config.Gateway}"
+
         Dim btn As New Button With {
             .Content = config.ConfigName,
+            .ToolTip = summary,
             .Margin = New Thickness(0, 0, 10, 10),
             .Padding = New Thickness(16, 8, 16, 8),
-            .Tag = config,
             .Style = TryCast(FindResource("SecondaryButton"), Style)
         }
+        AddHandler btn.Click, Async Sub() Await ApplyQuickConfigAsync(config)
 
-        ' 左鍵點擊：套用配置
-        AddHandler btn.Click, Sub(s, e)
-                                  ApplyQuickConfig(config)
-                              End Sub
-
-        ' 右鍵選單
-        Dim contextMenu As New ContextMenu
         Dim editItem As New MenuItem With {.Header = "編輯"}
+        AddHandler editItem.Click, Sub() EditConfig(config)
+
         Dim deleteItem As New MenuItem With {.Header = "刪除"}
+        AddHandler deleteItem.Click, Sub() DeleteConfig(config)
 
-        AddHandler editItem.Click, Sub(s, e)
-                                       EditConfig(config)
-                                   End Sub
+        Dim menu As New ContextMenu
+        menu.Items.Add(editItem)
+        menu.Items.Add(deleteItem)
+        btn.ContextMenu = menu
 
-        AddHandler deleteItem.Click, Sub(s, e)
-                                         DeleteConfig(config)
-                                     End Sub
+        Return btn
+    End Function
 
-        contextMenu.Items.Add(editItem)
-        contextMenu.Items.Add(deleteItem)
-        btn.ContextMenu = contextMenu
+    Private Async Function ApplyQuickConfigAsync(config As IPConfiguration) As Task
+        If Not EnsureAdapterSelected() Then Return
 
-        QuickConfigPanel.Children.Add(btn)
-    End Sub
-
-    ' 套用快速配置
-    Private Sub ApplyQuickConfig(config As IPConfiguration)
-        If _currentAdapter Is Nothing Then
+        ' 舊版設定檔可能含有不合法的值，套用前再驗證一次
+        Dim validationError = IPValidator.Validate(config)
+        If validationError IsNot Nothing Then
+            _notifier?.ShowWarning($"配置 '{config.ConfigName}' 無效：{validationError}", _notifierOptions)
             Return
         End If
 
-        Try
-            If NetworkService.ApplyIPConfiguration(_currentAdapter.Name, config) Then
-                _notifier?.ShowSuccess($"已成功套用配置 '{config.ConfigName}'", _notifier_options)
-                RefreshCurrentAdapter()
-            End If
-        Catch ex As Exception
+        Await ApplyConfigAsync(config, $"已成功套用配置 '{config.ConfigName}'")
+    End Function
 
-            _notifier?.ShowError(ex.Message, _notifier_options)
-        End Try
-    End Sub
-
-    ' 新增配置按鈕點擊
     Private Sub AddConfig_Click(sender As Object, e As RoutedEventArgs)
-        Dim dialog As New ConfigDialog()
+        Dim dialog As New ConfigDialog With {.Owner = Me}
         If dialog.ShowDialog() = True Then
-            Dim newConfig = dialog.Configuration
-
-            ' 儲存全局配置
-            _configStorage.Add(newConfig)
-            SaveConfigToSettings()
-
-            ' 新增按鈕
-            AddQuickConfigButton(newConfig)
+            _configStorage.Add(dialog.Configuration.Clone())
+            SaveConfigsToFile()
+            RenderQuickConfigs()
         End If
     End Sub
 
-    ' 編輯配置
     Private Sub EditConfig(config As IPConfiguration)
-        Dim dialog As New ConfigDialog(config)
+        Dim dialog As New ConfigDialog(config) With {.Owner = Me}
         If dialog.ShowDialog() = True Then
-            ' 更新配置
-            config.ConfigName = dialog.Configuration.ConfigName
-            config.IPAddress = dialog.Configuration.IPAddress
-            config.SubnetMask = dialog.Configuration.SubnetMask
-            config.Gateway = dialog.Configuration.Gateway
-
-            SaveConfigToSettings()
-            LoadQuickConfigs()
+            config.CopyFrom(dialog.Configuration)
+            SaveConfigsToFile()
+            RenderQuickConfigs()
         End If
     End Sub
 
-    ' 刪除配置
     Private Sub DeleteConfig(config As IPConfiguration)
-        Dim result = MessageBox.Show($"確定要刪除配置 '{config.ConfigName}' 嗎？", "確認刪除", MessageBoxButton.YesNo, MessageBoxImage.Question)
-
+        Dim result = MessageBox.Show(Me, $"確定要刪除配置 '{config.ConfigName}' 嗎？", "確認刪除",
+                                     MessageBoxButton.YesNo, MessageBoxImage.Question)
         If result = MessageBoxResult.Yes Then
             _configStorage.Remove(config)
-            SaveConfigToSettings()
-            LoadQuickConfigs()
+            SaveConfigsToFile()
+            RenderQuickConfigs()
         End If
     End Sub
 
-    ' 手動套用 IP 設定
-    Private Sub ApplyManual_Click(sender As Object, e As RoutedEventArgs)
-        If _currentAdapter Is Nothing Then
-            _notifier?.ShowWarning("請先選擇一個網路介面卡", _notifier_options)
-            Return
-        End If
+#End Region
 
-        ' 驗證輸入（閘道可以留空）
-        If String.IsNullOrWhiteSpace(ManualIP.IPAddress) OrElse
-           String.IsNullOrWhiteSpace(ManualMask.IPAddress) Then
-            _notifier?.ShowWarning("請填寫 IP 位址和子網路遮罩", _notifier_options)
-            Return
-        End If
+#Region "設定檔存取"
 
+    Private Shared ReadOnly JsonOptions As New JsonSerializerOptions With {.WriteIndented = True}
+
+    Private Sub LoadConfigsFromFile()
+        _configStorage = New List(Of IPConfiguration)
         Try
-            ' 處理閘道：如果為空或全為 0 則設為 0.0.0.0
-            Dim gateway As String = ManualGateway.IPAddress.Trim()
-            If String.IsNullOrWhiteSpace(gateway) OrElse gateway = "0.0.0.0" Then
-                gateway = "0.0.0.0"
-            End If
+            Dim path = GetConfigFilePath()
+            If Not File.Exists(path) Then Return
 
-            Dim config As New IPConfiguration With {
-                .IPAddress = ManualIP.IPAddress.Trim(),
-                .SubnetMask = ManualMask.IPAddress.Trim(),
-                .Gateway = gateway
-            }
+            Dim loaded = JsonSerializer.Deserialize(Of List(Of IPConfiguration))(File.ReadAllText(path))
+            If loaded Is Nothing Then Return
 
-            If NetworkService.ApplyIPConfiguration(_currentAdapter.Name, config) Then
-                _notifier?.ShowSuccess("已成功套用 IP 設定", _notifier_options)
-                RefreshCurrentAdapter()
-            End If
+            For Each config In loaded
+                config.Normalize()
+            Next
+            _configStorage = loaded
         Catch ex As Exception
-            _notifier?.ShowError(ex.Message, _notifier_options)
+            _notifier?.ShowWarning("設定檔讀取失敗，已略過: " & ex.Message, _notifierOptions)
         End Try
     End Sub
 
-    ' 切換到 DHCP
-    Private Sub SetDHCP_Click(sender As Object, e As RoutedEventArgs)
-        If _currentAdapter Is Nothing Then
-            _notifier?.ShowWarning("請先選擇一個網路介面卡", _notifier_options)
-            Return
-        End If
-
+    Private Sub SaveConfigsToFile()
         Try
-            If NetworkService.SetDHCP(_currentAdapter.Name) Then
-                _notifier?.ShowSuccess("已成功切換到 DHCP 模式", _notifier_options)
-                RefreshCurrentAdapter()
-            End If
+            File.WriteAllText(GetConfigFilePath(), JsonSerializer.Serialize(_configStorage, JsonOptions))
         Catch ex As Exception
-            _notifier?.ShowError(ex.Message, _notifier_options)
+            _notifier?.ShowError("儲存配置失敗: " & ex.Message, _notifierOptions)
         End Try
     End Sub
 
-    ' 刷新當前網卡資訊（IP 設定變更後調用）
-    Private Sub RefreshCurrentAdapter()
-        ' 暫停自動刷新，避免重複刷新
-        If _refreshTimer IsNot Nothing Then
-            _refreshTimer.Stop()
-        End If
-
-        ' 延遲 1 秒後刷新，等待網路設定生效
-        Dim timer As New Threading.DispatcherTimer With {
-            .Interval = TimeSpan.FromSeconds(1)
-        }
-
-        AddHandler timer.Tick, Sub(s, e)
-                                   timer.Stop()
-
-                                   ' 執行刷新
-                                   RefreshAdapters()
-
-                                   ' 重啟自動刷新
-                                   If _refreshTimer IsNot Nothing Then
-                                       _refreshTimer.Start()
-                                   End If
-                               End Sub
-
-        timer.Start()
-    End Sub
-
-    ' 從 JSON 檔案載入配置
-    Private Sub LoadConfigFromSettings()
-        _configStorage.Clear()
-
-        Try
-            Dim configPath = GetConfigFilePath()
-            If File.Exists(configPath) Then
-                Dim json = File.ReadAllText(configPath)
-                Dim loadedList = JsonSerializer.Deserialize(Of List(Of IPConfiguration))(json)
-                If loadedList IsNot Nothing Then
-                    _configStorage = loadedList
-                Else
-                    _configStorage = New List(Of IPConfiguration)
-                End If
-            End If
-        Catch ex As Exception
-            ' 設定檔可能不存在或格式錯誤，忽略
-            _configStorage = New List(Of IPConfiguration)
-        End Try
-    End Sub
-
-    ' 儲存配置到 JSON 檔案
-    Private Sub SaveConfigToSettings()
-        Try
-            Dim configPath = GetConfigFilePath()
-            Dim json = JsonSerializer.Serialize(_configStorage, New JsonSerializerOptions With {.WriteIndented = True})
-            File.WriteAllText(configPath, json)
-        Catch ex As Exception
-            _notifier?.ShowError("儲存配置失敗: " & ex.Message, _notifier_options)
-        End Try
-    End Sub
-
-    ' 取得配置檔路徑
-    Private Function GetConfigFilePath() As String
-        Dim appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
-        Dim appFolder = Path.Combine(appDataPath, "QuickIPChange")
-        If Not Directory.Exists(appFolder) Then
-            Directory.CreateDirectory(appFolder)
-        End If
-        Return Path.Combine(appFolder, "configs.json")
+    Private Shared Function GetConfigFilePath() As String
+        Dim folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickIPChange")
+        Directory.CreateDirectory(folder)
+        Return Path.Combine(folder, "configs.json")
     End Function
+
+#End Region
 
 End Class
