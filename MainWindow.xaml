@@ -219,7 +219,7 @@
                     </StackPanel>
 
                     <StackPanel Grid.Row="2" Grid.Column="2">
-                        <Label Content="慣用 DNS（可留空，留空則不變更）"/>
+                        <Label Content="慣用 DNS（可留空，不變更）"/>
                         <local:IPAddressControl x:Name="ManualDns1" Margin="0,4,0,12" HorizontalAlignment="Left"/>
                     </StackPanel>
 
