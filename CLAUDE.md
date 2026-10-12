@@ -18,7 +18,7 @@ dotnet build -c Debug
 - `Models/`：`NetworkAdapterInfo`（列表資料、以介面 GUID `Id` 比對）、`IPConfiguration`（可儲存的靜態設定，含 DNS）。
 - `MainWindow`：每 3 秒在背景刷新網卡並增量合併進列表；手動輸入區只在切換網卡或套用成功後回填，不會被定時刷新覆蓋。
 - `IPAddressControl`：四段式 IP 輸入；四段皆空時 `IPAddress` 回傳空字串。
-- 顏色一律使用 `Styles/DarkTheme.xaml` 的資源，不要在 XAML 硬編碼色碼。
+- 顏色一律以 `DynamicResource` 引用 `Styles/Colors.Dark.xaml` / `Styles/Colors.Light.xaml` 的畫刷（控制項樣式在 `Styles/Theme.xaml`），不要在 XAML 硬編碼色碼。`Services/ThemeManager.vb` 在執行期置換顏色字典切換主題，選擇存於 `%AppData%\QuickIPChange\settings.json`（預設跟隨系統）。
 
 ## 慣例
 

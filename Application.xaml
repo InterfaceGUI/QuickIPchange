@@ -1,4 +1,4 @@
-﻿<Application x:Class="Application"
+<Application x:Class="Application"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:QuickIPChange"
@@ -6,7 +6,9 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Styles/DarkTheme.xaml"/>
+                <!-- 顏色字典由 ThemeManager 在啟動時依設定置換為 Colors.Dark / Colors.Light -->
+                <ResourceDictionary Source="Styles/Colors.Dark.xaml"/>
+                <ResourceDictionary Source="Styles/Theme.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/ToastNotifications.Messages;component/Themes/Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

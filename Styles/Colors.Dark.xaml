@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 深色主題配色（偏灰、對比柔和，較易閱讀） -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#1B1E24"/>
+    <SolidColorBrush x:Key="SidebarBrush" Color="#21252D"/>
+    <SolidColorBrush x:Key="CardBrush" Color="#262B34"/>
+    <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="#2C323C"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#1E222A"/>
+    <SolidColorBrush x:Key="ForegroundBrush" Color="#E6E8EC"/>
+    <SolidColorBrush x:Key="SecondaryForegroundBrush" Color="#9AA3B2"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#3A4150"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#333A46"/>
+    <SolidColorBrush x:Key="SelectedBrush" Color="#2C4A6E"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#3D8BE8"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#5B9FF0"/>
+    <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FF7A7A"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#4CC38A"/>
+    <SolidColorBrush x:Key="OverlayBrush" Color="#99000000"/>
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#4A5262"/>
+</ResourceDictionary>

@@ -9,24 +9,29 @@
         Height="800" Width="900"
         MinHeight="720" MinWidth="860"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BackgroundBrush}"
-        Foreground="{StaticResource ForegroundBrush}">
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource ForegroundBrush}">
     <Window.Resources>
         <Style x:Key="Card" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="16"/>
         </Style>
         <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="FontSize" Value="15"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style x:Key="SectionHint" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryForegroundBrush}"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
         <Style x:Key="DetailLabel" TargetType="Label">
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Foreground" Value="{StaticResource SecondaryForegroundBrush}"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryForegroundBrush}"/>
             <Setter Property="Padding" Value="0"/>
         </Style>
         <Style x:Key="DetailValue" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -38,213 +43,255 @@
 
     <Grid>
         <Grid x:Name="ContentRoot">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="300"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- 左側：網卡列表 -->
-        <Grid Grid.Column="0" Background="{StaticResource SecondaryBackgroundBrush}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <Border Grid.Row="0" Padding="15,12"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-                <TextBlock Text="網路介面卡" FontSize="16" FontWeight="SemiBold"/>
-            </Border>
-
-            <ListBox Grid.Row="1" x:Name="AdapterListBox" Margin="8"
-                     Background="Transparent"
-                     SelectionChanged="AdapterListBox_SelectionChanged">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Grid.Column="0"
-                                       Text="{Binding AdapterIcon}"
-                                       FontFamily="Segoe MDL2 Assets"
-                                       FontSize="24"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,12,0"/>
-
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Text="{Binding DisplayIPInfo}"
-                                           FontSize="12"
-                                           Foreground="{StaticResource SecondaryForegroundBrush}"
-                                           Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-
-            <TextBlock Grid.Row="1" x:Name="NoAdapterText"
-                       Text="找不到實體網卡"
-                       Foreground="{StaticResource SecondaryForegroundBrush}"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Visibility="Collapsed"/>
-        </Grid>
-
-        <!-- 右側：詳細資訊與設定 -->
-        <Grid Grid.Column="1" Margin="12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <!-- 詳細資訊 -->
-            <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,12">
+            <!-- 左側：網卡列表 -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SidebarBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0,0,1,0">
                 <Grid>
-                    <Grid x:Name="DetailPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="16,14,12,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="網路介面卡" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="AdapterCountText" Text=""
+                                       FontSize="12" Margin="0,2,0,0"
+                                       Foreground="{DynamicResource SecondaryForegroundBrush}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" x:Name="ThemeToggleButton"
+                                Style="{StaticResource IconButton}"
+                                Content="&#xE706;"
+                                ToolTip="切換淺色 / 深色主題"
+                                VerticalAlignment="Center"
+                                Click="ThemeToggle_Click"/>
+                    </Grid>
+
+                    <ListBox Grid.Row="1" x:Name="AdapterListBox" Margin="8,0,8,8"
+                             SelectionChanged="AdapterListBox_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding AdapterIcon}"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="22"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,12,0"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding DisplayIPInfo}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource SecondaryForegroundBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock Grid.Row="1" x:Name="NoAdapterText"
+                               Text="找不到實體網卡"
+                               Foreground="{DynamicResource SecondaryForegroundBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+
+            <!-- 右側：詳細資訊與設定 -->
+            <Grid Grid.Column="1" Margin="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- 詳細資訊 -->
+                <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid x:Name="DetailPanel" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock x:Name="DetailName" FontSize="18" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="DetailDescription" FontSize="12"
+                                               Foreground="{DynamicResource SecondaryForegroundBrush}"
+                                               TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <!-- 連線狀態徽章 -->
+                                <Border Grid.Column="1" x:Name="StatusBadge"
+                                        CornerRadius="10" Padding="10,3"
+                                        VerticalAlignment="Top" Margin="12,2,0,0"
+                                        Background="{DynamicResource HoverBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse x:Name="StatusDot" Width="8" Height="8"
+                                                 VerticalAlignment="Center" Margin="0,0,6,0"
+                                                 Fill="{DynamicResource SecondaryForegroundBrush}"/>
+                                        <TextBlock x:Name="StatusText" Text="未連線" FontSize="12"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,10">
+                                <Label Content="IP 位址" Style="{StaticResource DetailLabel}"/>
+                                <TextBlock x:Name="DetailIP" Style="{StaticResource DetailValue}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="20,0,0,10">
+                                <Label Content="子網路遮罩" Style="{StaticResource DetailLabel}"/>
+                                <TextBlock x:Name="DetailMask" Style="{StaticResource DetailValue}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,10">
+                                <Label Content="預設閘道" Style="{StaticResource DetailLabel}"/>
+                                <TextBlock x:Name="DetailGateway" Style="{StaticResource DetailValue}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="20,0,0,10">
+                                <Label Content="DNS 伺服器" Style="{StaticResource DetailLabel}"/>
+                                <TextBlock x:Name="DetailDns" Style="{StaticResource DetailValue}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="3" Grid.Column="0">
+                                <Label Content="MAC 位址" Style="{StaticResource DetailLabel}"/>
+                                <TextBlock x:Name="DetailMAC" Style="{StaticResource DetailValue}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="3" Grid.Column="1" Margin="20,0,0,0">
+                                <Label Content="取得方式" Style="{StaticResource DetailLabel}"/>
+                                <TextBlock x:Name="DetailMode" Style="{StaticResource DetailValue}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock x:Name="NoSelectionText"
+                                   Text="請從左側選擇一個網路介面卡"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource SecondaryForegroundBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Margin="0,30"/>
+                    </Grid>
+                </Border>
+
+                <!-- 快速切換配置 -->
+                <Border Grid.Row="1" x:Name="QuickPanel" Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="快速切換配置" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="左鍵套用到目前網卡，右鍵編輯或刪除" Style="{StaticResource SectionHint}"/>
+
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      MaxHeight="150">
+                            <WrapPanel x:Name="QuickConfigPanel" Orientation="Horizontal"/>
+                        </ScrollViewer>
+
+                        <TextBlock x:Name="NoConfigText"
+                                   Text="尚無配置，按下方按鈕新增"
+                                   Style="{StaticResource SectionHint}"
+                                   Margin="0,0,0,4" Visibility="Collapsed"/>
+
+                        <Button Content="+ 新增配置"
+                                Style="{StaticResource SecondaryButton}"
+                                Margin="0,8,0,0"
+                                Click="AddConfig_Click"
+                                HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 手動設定 -->
+                <Border Grid.Row="3" x:Name="ManualPanel" Style="{StaticResource Card}">
+                    <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,15">
-                            <TextBlock x:Name="DetailName" FontSize="18" FontWeight="Bold"/>
-                            <TextBlock x:Name="DetailDescription" FontSize="12"
-                                       Foreground="{StaticResource SecondaryForegroundBrush}"
-                                       TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Grid.Row="0" Grid.ColumnSpan="3">
+                            <TextBlock Text="手動設定 IP" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="閘道與 DNS 可留空；留空的 DNS 不會變更" Style="{StaticResource SectionHint}"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,10">
-                            <Label Content="IP 位址" Style="{StaticResource DetailLabel}"/>
-                            <TextBlock x:Name="DetailIP" Style="{StaticResource DetailValue}"/>
+                        <StackPanel Grid.Row="1" Grid.Column="0">
+                            <Label Content="IP 位址"/>
+                            <local:IPAddressControl x:Name="ManualIP" Margin="0,4,0,12" HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="20,0,0,10">
-                            <Label Content="子網路遮罩" Style="{StaticResource DetailLabel}"/>
-                            <TextBlock x:Name="DetailMask" Style="{StaticResource DetailValue}"/>
+                        <StackPanel Grid.Row="1" Grid.Column="2">
+                            <Label Content="子網路遮罩"/>
+                            <local:IPAddressControl x:Name="ManualMask" Margin="0,4,0,12" HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,10">
-                            <Label Content="預設閘道" Style="{StaticResource DetailLabel}"/>
-                            <TextBlock x:Name="DetailGateway" Style="{StaticResource DetailValue}"/>
+                        <StackPanel Grid.Row="2" Grid.Column="0">
+                            <Label Content="預設閘道"/>
+                            <local:IPAddressControl x:Name="ManualGateway" Margin="0,4,0,12" HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="2" Grid.Column="1" Margin="20,0,0,10">
-                            <Label Content="DNS 伺服器" Style="{StaticResource DetailLabel}"/>
-                            <TextBlock x:Name="DetailDns" Style="{StaticResource DetailValue}"/>
+                        <StackPanel Grid.Row="2" Grid.Column="2">
+                            <Label Content="慣用 DNS"/>
+                            <local:IPAddressControl x:Name="ManualDns1" Margin="0,4,0,12" HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,0,0">
-                            <Label Content="MAC 位址" Style="{StaticResource DetailLabel}"/>
-                            <TextBlock x:Name="DetailMAC" Style="{StaticResource DetailValue}"/>
+                        <StackPanel Grid.Row="3" Grid.Column="0">
+                            <Label Content="其他 DNS"/>
+                            <local:IPAddressControl x:Name="ManualDns2" Margin="0,4,0,0" HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="3" Grid.Column="1" Margin="20,0,0,0">
-                            <Label Content="取得方式" Style="{StaticResource DetailLabel}"/>
-                            <TextBlock x:Name="DetailMode" Style="{StaticResource DetailValue}"/>
+                        <StackPanel Grid.Row="3" Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Bottom">
+                            <Button x:Name="ApplyButton" Content="套用設定"
+                                    Click="ApplyManual_Click"
+                                    Margin="0,0,10,0"
+                                    Padding="20,10"/>
+                            <Button x:Name="DhcpButton" Content="使用 DHCP"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Click="SetDHCP_Click"
+                                    Padding="20,10"/>
                         </StackPanel>
                     </Grid>
-
-                    <TextBlock x:Name="NoSelectionText"
-                               Text="請選擇一個網路介面卡"
-                               FontSize="14"
-                               Foreground="{StaticResource SecondaryForegroundBrush}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Margin="0,30"/>
-                </Grid>
-            </Border>
-
-            <!-- 快速切換配置 -->
-            <Border Grid.Row="1" x:Name="QuickPanel" Style="{StaticResource Card}" Margin="0,0,0,12">
-                <StackPanel>
-                    <TextBlock Text="快速切換配置" Style="{StaticResource SectionTitle}"/>
-                    <TextBlock Text="左鍵套用，右鍵編輯或刪除"
-                               FontSize="12" Margin="0,-8,0,10"
-                               Foreground="{StaticResource SecondaryForegroundBrush}"/>
-
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  MaxHeight="150">
-                        <WrapPanel x:Name="QuickConfigPanel" Orientation="Horizontal"/>
-                    </ScrollViewer>
-
-                    <Button Content="+ 新增配置"
-                            Style="{StaticResource SecondaryButton}"
-                            Margin="0,12,0,0"
-                            Click="AddConfig_Click"
-                            HorizontalAlignment="Left"/>
-                </StackPanel>
-            </Border>
-
-            <!-- 手動設定 -->
-            <Border Grid.Row="3" x:Name="ManualPanel" Style="{StaticResource Card}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Row="0" Grid.ColumnSpan="3"
-                               Text="手動設定 IP" Style="{StaticResource SectionTitle}"/>
-
-                    <StackPanel Grid.Row="1" Grid.Column="0">
-                        <Label Content="IP 位址"/>
-                        <local:IPAddressControl x:Name="ManualIP" Margin="0,4,0,12" HorizontalAlignment="Left"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="1" Grid.Column="2">
-                        <Label Content="子網路遮罩"/>
-                        <local:IPAddressControl x:Name="ManualMask" Margin="0,4,0,12" HorizontalAlignment="Left"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="2" Grid.Column="0">
-                        <Label Content="預設閘道（可留空）"/>
-                        <local:IPAddressControl x:Name="ManualGateway" Margin="0,4,0,12" HorizontalAlignment="Left"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="2" Grid.Column="2">
-                        <Label Content="慣用 DNS（可留空，不變更）"/>
-                        <local:IPAddressControl x:Name="ManualDns1" Margin="0,4,0,12" HorizontalAlignment="Left"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="3" Grid.Column="0">
-                        <Label Content="其他 DNS（可留空）"/>
-                        <local:IPAddressControl x:Name="ManualDns2" Margin="0,4,0,0" HorizontalAlignment="Left"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="3" Grid.Column="2"
-                                Orientation="Horizontal"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Bottom">
-                        <Button x:Name="ApplyButton" Content="套用設定"
-                                Click="ApplyManual_Click"
-                                Margin="0,0,10,0"
-                                Padding="20,10"/>
-                        <Button x:Name="DhcpButton" Content="使用 DHCP"
-                                Style="{StaticResource SecondaryButton}"
-                                Click="SetDHCP_Click"
-                                Padding="20,10"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-        </Grid>
+                </Border>
+            </Grid>
         </Grid>
 
         <!-- 視窗內的配置編輯面板，覆蓋在內容之上 -->

@@ -25,6 +25,9 @@ Class MainWindow
     Private Async Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         InitializeNotifier()
 
+        AddHandler ThemeManager.ThemeChanged, AddressOf UpdateThemeIcon
+        UpdateThemeIcon()
+
         AdapterListBox.ItemsSource = _adapters
         LoadConfigsFromFile()
         RenderQuickConfigs()
@@ -41,6 +44,40 @@ Class MainWindow
         _refreshTimer = Nothing
         _notifier?.Dispose()
         _notifier = Nothing
+        RemoveHandler ThemeManager.ThemeChanged, AddressOf UpdateThemeIcon
+    End Sub
+
+    Private Sub ThemeToggle_Click(sender As Object, e As RoutedEventArgs)
+        ThemeManager.Toggle()
+    End Sub
+
+    ''' <summary>深色時顯示太陽（切到淺色），淺色時顯示月亮（切到深色），並同步視窗標題列顏色</summary>
+    Private Sub UpdateThemeIcon()
+        ThemeToggleButton.Content = If(ThemeManager.IsDarkActive, ChrW(&HE706), ChrW(&HE708))
+        ThemeToggleButton.ToolTip = If(ThemeManager.IsDarkActive, "切換為淺色主題", "切換為深色主題")
+        ApplyTitleBarTheme()
+    End Sub
+
+    Private Sub MainWindow_SourceInitialized(sender As Object, e As EventArgs) Handles Me.SourceInitialized
+        ApplyTitleBarTheme()
+    End Sub
+
+    ' DWMWA_USE_IMMERSIVE_DARK_MODE：讓系統標題列配合深色主題（Windows 10 20H1 以後）
+    Private Const DWMWA_USE_IMMERSIVE_DARK_MODE As Integer = 20
+
+    <Runtime.InteropServices.DllImport("dwmapi.dll")>
+    Private Shared Function DwmSetWindowAttribute(hwnd As IntPtr, attr As Integer, ByRef value As Integer, size As Integer) As Integer
+    End Function
+
+    Private Sub ApplyTitleBarTheme()
+        Dim hwnd = New Interop.WindowInteropHelper(Me).Handle
+        If hwnd = IntPtr.Zero Then Return
+        Dim dark = If(ThemeManager.IsDarkActive, 1, 0)
+        Try
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, dark, 4)
+        Catch
+            ' 舊版 Windows 不支援時忽略
+        End Try
     End Sub
 
     Private Sub InitializeNotifier()
@@ -104,6 +141,8 @@ Class MainWindow
         Next
 
         NoAdapterText.Visibility = If(_adapters.Count = 0, Visibility.Visible, Visibility.Collapsed)
+        Dim connectedCount = _adapters.Where(Function(a) a.IsConnected).Count()
+        AdapterCountText.Text = $"{_adapters.Count} 張網卡，{connectedCount} 張已連線"
 
         If AdapterListBox.SelectedItem Is Nothing AndAlso _adapters.Count > 0 Then
             Dim previous = _adapters.FirstOrDefault(Function(a) a.Id = previousId)
@@ -138,8 +177,11 @@ Class MainWindow
         DetailGateway.Text = OrDash(adapter.Gateway)
         DetailDns.Text = OrDash(adapter.DnsServers)
         DetailMAC.Text = OrDash(adapter.MacAddress)
-        DetailMode.Text = If(adapter.IsDHCPEnabled, "DHCP 自動取得", "手動設定（靜態）") &
-                          If(adapter.IsConnected, "", "，目前未連線")
+        DetailMode.Text = If(adapter.IsDHCPEnabled, "DHCP 自動取得", "手動設定（靜態）")
+
+        StatusText.Text = If(adapter.IsConnected, "已連線", "未連線")
+        StatusDot.SetResourceReference(Shapes.Shape.FillProperty,
+                                       If(adapter.IsConnected, "SuccessBrush", "SecondaryForegroundBrush"))
     End Sub
 
     ''' <summary>把目前網卡的設定帶入手動輸入區。只在切換網卡或套用成功後呼叫，避免覆蓋使用者正在輸入的內容</summary>
@@ -250,6 +292,7 @@ Class MainWindow
         For Each config In _configStorage
             QuickConfigPanel.Children.Add(CreateQuickConfigButton(config))
         Next
+        NoConfigText.Visibility = If(_configStorage.Count = 0, Visibility.Visible, Visibility.Collapsed)
     End Sub
 
     Private Function CreateQuickConfigButton(config As IPConfiguration) As Button
@@ -259,13 +302,15 @@ Class MainWindow
             .FontWeight = FontWeights.SemiBold,
             .HorizontalAlignment = HorizontalAlignment.Center
         })
-        content.Children.Add(New TextBlock With {
+        Dim ipText As New TextBlock With {
             .Text = config.IPAddress,
             .FontSize = 11,
-            .Foreground = TryCast(FindResource("SecondaryForegroundBrush"), Brush),
             .HorizontalAlignment = HorizontalAlignment.Center,
             .Margin = New Thickness(0, 2, 0, 0)
-        })
+        }
+        ' 以資源參照而非固定畫刷，切換主題時顏色才會跟著變
+        ipText.SetResourceReference(TextBlock.ForegroundProperty, "SecondaryForegroundBrush")
+        content.Children.Add(ipText)
 
         Dim tooltip = $"IP：{config.IPAddress}{vbCrLf}遮罩：{config.SubnetMask}"
         If Not String.IsNullOrEmpty(config.Gateway) Then tooltip &= $"{vbCrLf}閘道：{config.Gateway}"
