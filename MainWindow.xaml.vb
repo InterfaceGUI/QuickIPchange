@@ -450,7 +450,14 @@ Class MainWindow
         _configStorage = New List(Of IPConfiguration)
         Try
             Dim path = GetConfigFilePath()
-            If Not File.Exists(path) Then Return
+            If Not File.Exists(path) Then
+                ' 首次啟動：若這台電腦跑過 V2，依其設定建立四組預設配置
+                If LegacyMigration.HasV2Settings() Then
+                    _configStorage = LegacyMigration.SeedFromV2()
+                    SaveConfigsToFile()
+                End If
+                Return
+            End If
 
             Dim loaded = JsonSerializer.Deserialize(Of List(Of IPConfiguration))(File.ReadAllText(path))
             If loaded Is Nothing Then Return

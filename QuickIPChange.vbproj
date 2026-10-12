@@ -7,9 +7,9 @@
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/app.ico</ApplicationIcon>
-    <Version>3.0.1</Version>
-    <AssemblyVersion>3.0.1.0</AssemblyVersion>
-    <FileVersion>3.0.1.0</FileVersion>
+    <Version>3.0.2</Version>
+    <AssemblyVersion>3.0.2.0</AssemblyVersion>
+    <FileVersion>3.0.2.0</FileVersion>
     <!-- ToastNotifications 僅提供 .NET Framework 目標，在 .NET 8 上可正常運作 -->
     <NoWarn>$(NoWarn);NU1701</NoWarn>
     <!-- 發布用設定（單一 exe，指令見 CLAUDE.md 與 .github/workflows/release-v3.yml） -->
