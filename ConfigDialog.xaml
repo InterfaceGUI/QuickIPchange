@@ -1,0 +1,60 @@
+<Window x:Class="ConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:QuickIPChange"
+        Title="配置編輯" Height="550" Width="270"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#0D0D0D">
+    <Grid Margin="20" Background="#0D0D0D">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="配置資訊" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,20"/>
+
+        <!-- 配置名稱 -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,15">
+            <Label Content="配置名稱"/>
+            <TextBox x:Name="ConfigNameBox" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- IP 位址 -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,15">
+            <Label Content="IP 位址"/>
+            <local:IPAddressControl x:Name="IPBox" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- 子網路遮罩 -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,15">
+            <Label Content="子網路遮罩"/>
+            <local:IPAddressControl x:Name="MaskBox" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- 預設閘道 -->
+        <StackPanel Grid.Row="4" Margin="0,0,0,15">
+            <Label Content="預設閘道（留空則為 0.0.0.0）"/>
+            <local:IPAddressControl x:Name="GatewayBox" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- 按鈕 -->
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="儲存"
+                    Click="Save_Click"
+                    Margin="0,0,10,0"
+                    Padding="20,10"
+                    MinWidth="100"/>
+            <Button Content="取消"
+                    Style="{StaticResource SecondaryButton}"
+                    Click="Cancel_Click"
+                    Padding="20,10"
+                    MinWidth="100"/>
+        </StackPanel>
+    </Grid>
+</Window>
